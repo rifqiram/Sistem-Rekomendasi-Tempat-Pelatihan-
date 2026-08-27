@@ -386,7 +386,7 @@
                             <span class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm font-black">SR</span>
                             <span class="font-extrabold text-lg text-slate-900">Sistem Rekomendasi Tempat Pelatihan</span>
                         </div>
-                        <p class="text-slate-500 text-sm mb-1">Surabaya, Jawa Timur</p>
+                        <p class="text-slate-500 text-sm mb-1">Magetan, Jawa Timur</p>
                         <p class="text-slate-500 text-sm mb-1">Email: admin@sistemrekomendasi.test</p>
                         <p class="text-slate-500 text-sm">Telepon: 0812-xxxx-xxxx</p>
                     </div>

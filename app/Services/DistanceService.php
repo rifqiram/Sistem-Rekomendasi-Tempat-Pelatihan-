@@ -31,3 +31,4 @@ class DistanceService
         return round($distance, 2);
     }
 }
+

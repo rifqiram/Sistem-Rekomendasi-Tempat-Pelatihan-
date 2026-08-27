@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Enrollment;
 use App\Models\Pelatihan;
+use App\Models\LogActivity;
 use Illuminate\Http\Request;
 
 class EnrollmentController extends Controller
@@ -45,7 +46,14 @@ class EnrollmentController extends Controller
             'training_center_id' => $pelatihan->training_center_id,
             'pelatihan_id' => $pelatihan->id,
             'tanggal_daftar' => now(),
-            'status' => 'terdaftar',
+            'status' => 'pending',
+        ]);
+
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'enroll',
+            'training_center_id' => $pelatihan->training_center_id,
+            'pelatihan_id' => $pelatihan->id,
         ]);
 
         return $this->successResponse($enrollment, 'Pendaftaran berhasil.', 201);

@@ -34,7 +34,7 @@ class EnrollmentController extends Controller
         }
 
         $data = $request->validate([
-            'status' => 'required|in:terdaftar,aktif,selesai,batal',
+            'status' => 'required|in:pending,approved,rejected',
         ]);
 
         $enrollment = Enrollment::findOrFail($id);

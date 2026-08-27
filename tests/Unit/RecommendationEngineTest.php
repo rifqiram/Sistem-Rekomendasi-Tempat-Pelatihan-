@@ -123,6 +123,62 @@ class RecommendationEngineTest extends TestCase
         $this->assertNotContains($trainingB->training_center_id, $tcIds);
     }
 
+    public function test_tc_beyond_max_distance_is_excluded()
+    {
+        $user = $this->createUserWithProfileAndQuestionnaire([
+            'jarak_maksimal' => 10,
+            'bidang_diminati' => 'Programming',
+        ]);
+
+        $tcWithin = TrainingCenter::create([
+            'nama' => 'TC Dalam Radius',
+            'alamat' => 'Alamat',
+            'telepon' => '000',
+            'latitude' => -7.6500,
+            'longitude' => 111.3200,
+        ]);
+
+        $tcBeyond = TrainingCenter::create([
+            'nama' => 'TC Luar Radius',
+            'alamat' => 'Alamat',
+            'telepon' => '000',
+            'latitude' => -6.2000,
+            'longitude' => 106.8166,
+        ]);
+
+        $this->createTraining(['training_center_id' => $tcWithin->id, 'interest_category' => 'Programming']);
+        $this->createTraining(['training_center_id' => $tcBeyond->id, 'interest_category' => 'Programming']);
+
+        $this->engine->generateForUser($user->id);
+        $recommendations = Recommendation::where('user_id', $user->id)->get();
+        
+        $this->assertCount(1, $recommendations);
+        $this->assertEquals($tcWithin->id, $recommendations->first()->training_center_id);
+    }
+
+    public function test_recommendation_stores_score_breakdown()
+    {
+        $user = $this->createUserWithProfileAndQuestionnaire(["bidang_diminati" => "Programming", "metode_pelatihan" => "Online", "tingkat_keahlian" => "Beginner"]);
+        $tc = TrainingCenter::create([
+            'nama' => 'TC Dalam Radius',
+            'alamat' => 'Alamat',
+            'telepon' => '000',
+            'latitude' => -7.6500,
+            'longitude' => 111.3200,
+        ]);
+        $this->createTraining(['training_center_id' => $tc->id, 'interest_category' => 'Programming', 'method' => 'Online', 'required_skill' => 'Beginner']);
+        
+        $this->engine->generateForUser($user->id);
+        $rec = Recommendation::where('user_id', $user->id)->first();
+        
+        $this->assertNotNull($rec->score_breakdown);
+        $breakdown = json_decode($rec->score_breakdown, true);
+        $this->assertArrayHasKey('interest', $breakdown);
+        $this->assertArrayHasKey('skill', $breakdown);
+        $this->assertArrayHasKey('method', $breakdown);
+        $this->assertArrayHasKey('distance', $breakdown);
+    }
+
     public function test_hard_filter_eliminates_mismatched_method(): void
     {
         $user = $this->createUserWithProfileAndQuestionnaire([

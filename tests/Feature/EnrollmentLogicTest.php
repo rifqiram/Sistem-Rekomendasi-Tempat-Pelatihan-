@@ -51,7 +51,7 @@ class EnrollmentLogicTest extends TestCase
         $this->assertDatabaseHas('enrollments', [
             'user_id' => $this->user->id,
             'pelatihan_id' => $this->pelatihan->id,
-            'status' => 'terdaftar'
+            'status' => 'pending'
         ]);
     }
 
@@ -73,6 +73,82 @@ class EnrollmentLogicTest extends TestCase
                  ->assertJsonPath('message', 'Anda sudah terdaftar pada pelatihan ini.');
     }
 
+    public function test_admin_can_reject_enrollment()
+    {
+        $enrollment = Enrollment::create([
+            'user_id' => $this->user->id,
+            'training_center_id' => $this->pelatihan->training_center_id,
+            'pelatihan_id' => $this->pelatihan->id,
+            'tanggal_daftar' => now(),
+            'status' => 'pending'
+        ]);
+
+        $this->actingAs($this->admin);
+
+        $response = $this->patchJson("/api/admin/enrollments/{$enrollment->id}/status", [
+            'status' => 'rejected'
+        ]);
+
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('enrollments', [
+            'id' => $enrollment->id,
+            'status' => 'rejected'
+        ]);
+    }
+
+    public function test_admin_cannot_set_invalid_enrollment_status()
+    {
+        $enrollment = Enrollment::create([
+            'user_id' => $this->user->id,
+            'training_center_id' => $this->pelatihan->training_center_id,
+            'pelatihan_id' => $this->pelatihan->id,
+            'tanggal_daftar' => now(),
+            'status' => 'pending'
+        ]);
+
+        $this->actingAs($this->admin);
+
+        $response = $this->patchJson("/api/admin/enrollments/{$enrollment->id}/status", [
+            'status' => 'terdaftar' // invalid old status
+        ]);
+
+        $response->assertStatus(422);
+    }
+
+    public function test_user_can_see_own_enrollment_history()
+    {
+        Enrollment::create([
+            'user_id' => $this->user->id,
+            'training_center_id' => $this->pelatihan->training_center_id,
+            'pelatihan_id' => $this->pelatihan->id,
+            'tanggal_daftar' => now(),
+            'status' => 'pending'
+        ]);
+
+        $this->actingAs($this->user);
+        $response = $this->getJson('/api/enrollments');
+
+        $response->assertStatus(200)->assertJsonCount(1, 'data');
+    }
+
+    public function test_user_cannot_see_other_users_enrollments()
+    {
+        $otherUser = User::factory()->create(['role' => 'user']);
+        
+        Enrollment::create([
+            'user_id' => $otherUser->id,
+            'training_center_id' => $this->pelatihan->training_center_id,
+            'pelatihan_id' => $this->pelatihan->id,
+            'tanggal_daftar' => now(),
+            'status' => 'pending'
+        ]);
+
+        $this->actingAs($this->user);
+        $response = $this->getJson('/api/enrollments');
+
+        $response->assertStatus(200)->assertJsonCount(0, 'data');
+    }
+
     public function test_admin_can_update_enrollment_status()
     {
         // Setup initial enrollment
@@ -81,20 +157,20 @@ class EnrollmentLogicTest extends TestCase
             'training_center_id' => $this->pelatihan->training_center_id,
             'pelatihan_id' => $this->pelatihan->id,
             'tanggal_daftar' => now(),
-            'status' => 'terdaftar'
+            'status' => 'pending'
         ]);
 
         $this->actingAs($this->admin);
 
-        // Update status to selesai
+        // Update status to approved
         $response = $this->patchJson("/api/admin/enrollments/{$enrollment->id}/status", [
-            'status' => 'selesai'
+            'status' => 'approved'
         ]);
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('enrollments', [
             'id' => $enrollment->id,
-            'status' => 'selesai'
+            'status' => 'approved'
         ]);
     }
 
@@ -105,14 +181,14 @@ class EnrollmentLogicTest extends TestCase
             'training_center_id' => $this->pelatihan->training_center_id,
             'pelatihan_id' => $this->pelatihan->id,
             'tanggal_daftar' => now(),
-            'status' => 'terdaftar'
+            'status' => 'pending'
         ]);
 
         $this->actingAs($this->user);
 
-        // Update status to selesai
+        // Update status to approved
         $response = $this->patchJson("/api/admin/enrollments/{$enrollment->id}/status", [
-            'status' => 'selesai'
+            'status' => 'approved'
         ]);
 
         $response->assertStatus(403);

@@ -79,6 +79,7 @@ class RecommendationEngine
     private function calculateWeightedScore($trainings, array $answers, Profile $profile)
     {
         $centerScores = [];
+        $centerMaxScores = []; // <-- Variable tambahan untuk breakdown data
         $distanceService = new DistanceService();
 
         // Ambil data training centers sekaligus
@@ -88,33 +89,48 @@ class RecommendationEngine
         foreach ($trainings as $training) {
             $score = 0;
 
+            $interestScore = 0;
+            $skillScore = 0;
+            $methodScore = 0;
+            $popularityScore = 0;
+
             // Bidang (35%)
             if (isset($answers['bidang_diminati']) && strtolower($training->interest_category) === strtolower($answers['bidang_diminati'])) {
-                $score += 35;
+                $interestScore = 35;
+                $score += $interestScore;
             }
 
             // Skill (20%)
             if (isset($answers['tingkat_keahlian']) && strtolower($training->required_skill) === strtolower($answers['tingkat_keahlian'])) {
-                $score += 20;
+                $skillScore = 20;
+                $score += $skillScore;
             }
 
             // Metode (15%)
             if (isset($answers['metode_pelatihan']) && strtolower($training->method) === strtolower($answers['metode_pelatihan'])) {
-                $score += 15;
+                $methodScore = 15;
+                $score += $methodScore;
             } elseif (strtolower($training->method) === 'hybrid') {
-                $score += 10; // Partial match
+                $methodScore = 10;
+                $score += $methodScore; // Partial match
             }
 
             // Popularitas (10%)
             $popularityVal = min(100, max(0, $training->popularity ?? 0));
-            $score += ($popularityVal / 100) * 10;
+            $popularityScore = ($popularityVal / 100) * 10;
+            $score += $popularityScore;
 
             // Aggregate ke Training Center: ambil skor base pelatihan tertinggi di TC tersebut
             $tcId = $training->training_center_id;
-            if (!isset($centerScores[$tcId])) {
+
+            if (!isset($centerScores[$tcId]) || $score > $centerScores[$tcId]) {
                 $centerScores[$tcId] = $score;
-            } else {
-                $centerScores[$tcId] = max($centerScores[$tcId], $score);
+                $centerMaxScores[$tcId] = [
+                    'interest' => $interestScore,
+                    'skill' => $skillScore,
+                    'method' => $methodScore,
+                    'popularity' => $popularityScore
+                ];
             }
         }
 
@@ -122,6 +138,7 @@ class RecommendationEngine
         foreach ($centerScores as $tcId => $baseScore) {
             $tc = $trainingCenters->get($tcId);
             $distanceKm = null;
+            $distScore = null;
             $finalScore = $baseScore;
 
             // Hitung Distance (20%) jika koordinat tersedia
@@ -136,6 +153,11 @@ class RecommendationEngine
                     ? (float) $answers['jarak_maksimal']
                     : 100;
 
+                // HARD FILTER: Jarak tidak boleh melebihi maxDistance
+                if ($distanceKm > $maxDistance) {
+                    continue; // Skip TC ini sepenuhnya
+                }
+
                 $distScore = max(0, (1 - ($distanceKm / $maxDistance)) * 20);
                 $finalScore += $distScore;
             }
@@ -143,7 +165,39 @@ class RecommendationEngine
             $scored[] = [
                 'training_center_id' => $tcId,
                 'score' => round($finalScore, 2),
-                'distance' => $distanceKm
+                'distance' => $distanceKm,
+                'score_breakdown' => [
+                    'interest' => [
+                        'score' => isset($answers['bidang_diminati']) && isset($centerMaxScores[$tcId]['interest']) ? $centerMaxScores[$tcId]['interest'] : 0,
+                        'max' => 35,
+                        'status' => (isset($answers['bidang_diminati']) && isset($centerMaxScores[$tcId]['interest']) && $centerMaxScores[$tcId]['interest'] == 35) ? 'match' : 'none',
+                        'label' => 'Minat yang Anda pilih: ' . (isset($answers['bidang_diminati']) ? $answers['bidang_diminati'] : 'Belum memilih')
+                    ],
+                    'skill' => [
+                        'score' => isset($answers['tingkat_keahlian']) && isset($centerMaxScores[$tcId]['skill']) ? $centerMaxScores[$tcId]['skill'] : 0,
+                        'max' => 20,
+                        'status' => (isset($answers['tingkat_keahlian']) && isset($centerMaxScores[$tcId]['skill']) && $centerMaxScores[$tcId]['skill'] == 20) ? 'match' : 'none',
+                        'label' => 'Keahlian yang Anda pilih: ' . (isset($answers['tingkat_keahlian']) ? $answers['tingkat_keahlian'] : 'Belum memilih')
+                    ],
+                    'method' => [
+                        'score' => isset($answers['metode_pelatihan']) && isset($centerMaxScores[$tcId]['method']) ? $centerMaxScores[$tcId]['method'] : 0,
+                        'max' => 15,
+                        'status' => (isset($answers['metode_pelatihan']) && isset($centerMaxScores[$tcId]['method'])) ? ($centerMaxScores[$tcId]['method'] == 15 ? 'match' : ($centerMaxScores[$tcId]['method'] == 10 ? 'partial' : 'none')) : 'none',
+                        'label' => 'Metode yang Anda pilih: ' . (isset($answers['metode_pelatihan']) ? $answers['metode_pelatihan'] : 'Belum memilih')
+                    ],
+                    'popularity' => [
+                        'score' => isset($centerMaxScores[$tcId]['popularity']) ? round($centerMaxScores[$tcId]['popularity'], 2) : 0,
+                        'max' => 10,
+                        'status' => (isset($centerMaxScores[$tcId]['popularity']) && $centerMaxScores[$tcId]['popularity'] >= 8) ? 'match' : (isset($centerMaxScores[$tcId]['popularity']) && $centerMaxScores[$tcId]['popularity'] > 4 ? 'partial' : 'none'),
+                        'label' => 'Berdasarkan popularitas pelatihan di TC ini'
+                    ],
+                    'distance' => [
+                        'score' => round(isset($distScore) ? $distScore : 0, 2),
+                        'max' => 20,
+                        'status' => (isset($distScore)) ? ($distScore >= 16 ? 'match' : ($distScore >= 8 ? 'partial' : 'none')) : 'none',
+                        'label' => $distanceKm !== null ? round($distanceKm, 2) . ' km dari lokasi Anda (Maks: ' . $maxDistance . ' km)' : 'Jarak tidak diketahui'
+                    ]
+                ]
             ];
         }
 
@@ -170,6 +224,7 @@ class RecommendationEngine
                 'training_center_id' => $item['training_center_id'],
                 'score' => $item['score'],
                 'distance' => $item['distance'],
+                'score_breakdown' => json_encode($item['score_breakdown']),
                 'rank' => $rank++
             ]);
         }

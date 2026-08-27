@@ -59,6 +59,35 @@ class AdminCrudTest extends TestCase
         $response->assertStatus(403);
     }
 
+    public function test_training_center_accepts_valid_google_maps_url(): void
+    {
+        $this->actingAs($this->admin);
+        $response = $this->postJson('/api/training-centers', [
+            'nama' => 'TC Maps', 
+            'alamat' => 'A', 
+            'telepon' => '1',
+            'latitude' => '-6.200',
+            'longitude' => '106.816',
+            'google_maps_url' => 'https://maps.google.com/?q=TC+Test',
+        ]);
+        
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('training_centers', ['google_maps_url' => 'https://maps.google.com/?q=TC+Test']);
+    }
+
+    public function test_training_center_rejects_invalid_google_maps_url(): void
+    {
+        $this->actingAs($this->admin);
+        $response = $this->postJson('/api/training-centers', [
+            'nama' => 'TC Bad', 
+            'alamat' => 'A', 
+            'telepon' => '1',
+            'google_maps_url' => 'bukan-url-valid',
+        ]);
+        
+        $response->assertStatus(422);
+    }
+
     public function test_admin_can_update_training_center(): void
     {
         $this->actingAs($this->admin);

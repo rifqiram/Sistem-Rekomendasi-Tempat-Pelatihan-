@@ -90,6 +90,35 @@ class SecurityAndLogTest extends TestCase
         ]);
     }
 
+    public function test_enrollment_creates_activity_log()
+    {
+        $this->actingAs($this->user);
+
+        $tc = \App\Models\TrainingCenter::create(['nama' => 'TC', 'alamat' => 'A', 'telepon' => '1']);
+        $pelatihan = \App\Models\Pelatihan::create([
+            'judul' => 'Pelatihan Log',
+            'training_center_id' => $tc->id,
+            'is_active' => true,
+            'interest_category' => 'IT',
+            'method' => 'Online',
+            'required_skill' => 'Beginner',
+            'tanggal_mulai' => '2026-01-01',
+            'tanggal_selesai' => '2026-01-10'
+        ]);
+
+        $response = $this->postJson('/api/enrollments', [
+            'pelatihan_id' => $pelatihan->id,
+        ]);
+
+        $response->assertStatus(201);
+
+        $this->assertDatabaseHas('log_activities', [
+            'user_id' => $this->user->id,
+            'activity_type' => 'enroll',
+            'pelatihan_id' => $pelatihan->id,
+        ]);
+    }
+
     public function test_admin_can_view_and_delete_log_activity()
     {
         $this->actingAs($this->admin);

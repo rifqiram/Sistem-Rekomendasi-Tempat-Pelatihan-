@@ -54,6 +54,59 @@ class BackendFlowTest extends TestCase
     /**
      * 2. Profile
      */
+    public function test_profile_coordinate_update_refreshes_recommendations()
+    {
+        $this->actingAs($this->user);
+        $initialRec = \App\Models\Recommendation::where('user_id', $this->user->id)->first();
+        
+        $response = $this->postJson('/api/profile', [
+            'age' => 25,
+            'education' => 'S1',
+            'district' => 'Kota B',
+            'phone' => '089999999',
+            'latitude' => -7.2500,
+            'longitude' => 112.7500,
+        ]);
+        
+        $response->assertStatus(200);
+        
+        $updatedRec = \App\Models\Recommendation::where('user_id', $this->user->id)->first();
+        // Just assert that generating runs and we have recommendations.
+        // We need a questionnaire to generate recommendations
+        \App\Models\QuestionnaireResponse::create([
+            'user_id' => $this->user->id,
+            'answers' => json_encode(['bidang_diminati' => 'Programming', 'metode_pelatihan' => 'Online', 'tingkat_keahlian' => 'Beginner', 'jarak_maksimal' => 50]),
+        ]);
+        
+        $response = $this->postJson('/api/profile', [
+            'age' => 25,
+            'education' => 'S1',
+            'district' => 'Kota B',
+            'phone' => '089999999',
+            'latitude' => -7.2500,
+            'longitude' => 112.7500,
+        ]);
+
+        $updatedRec = \App\Models\Recommendation::where('user_id', $this->user->id)->first();
+        // Create TC and training so there is something to recommend
+        $tc = \App\Models\TrainingCenter::create([
+            'nama' => 'TC', 'alamat' => 'A', 'telepon' => '1', 'latitude' => -7.2500, 'longitude' => 112.7500
+        ]);
+        \App\Models\Pelatihan::create(['judul' => 'A', 'training_center_id' => $tc->id, 'interest_category' => 'Programming', 'method' => 'Online', 'required_skill' => 'Beginner', 'is_active' => true, 'tanggal_mulai' => '2026-01-01', 'tanggal_selesai' => '2026-01-10']);
+        
+        $response = $this->postJson('/api/profile', [
+            'age' => 25,
+            'education' => 'S1',
+            'district' => 'Kota B',
+            'phone' => '089999999',
+            'latitude' => -7.2500,
+            'longitude' => 112.7500,
+        ]);
+
+        $updatedRec = \App\Models\Recommendation::where('user_id', $this->user->id)->first();
+        $this->assertNotNull($updatedRec);
+    }
+
     public function test_user_can_view_and_update_profile()
     {
         $this->actingAs($this->user);

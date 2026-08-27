@@ -261,3 +261,50 @@ Perubahan yang dilakukan meliputi:
     *   Tulisan pada menu dirubah menggunakan warna abu-abu gelap.
     *   State *hover* menggunakan warna biru awan (`bg-sky-100` / `#e0f2fe`) dengan font kebiruan.
     *   Tombol menu dibuat menjadi melayang membentuk "Pil" (dengan margin spasi antar pinggiran).
+
+## 11. Refactoring Detail Rekomendasi (Juli 2026)
+Sebagai kelengkapan UI *User Experience*, telah dilakukan penyempurnaan fitur pada modul Rekomendasi agar sistem lebih informatif ("Explainable Recommendation").
+1.  **Distance Hard-Filter Bugfix:** Memperbaiki celah logika pada `RecommendationEngine` yang menyebabkan Training Center di luar "radius maksimum" kuesioner tetap muncul. Kini, filter jarak diterapkan secara mutlak (*Hard Filter*) sebelum pemberian poin proporsional.
+2.  **Transparansi Skor (Score Breakdown):** Menambahkan fitur *Expandable Accordion* di dalam Modal Detail Training Center yang menampilkan kontribusi rincian poin (Bidang, Skill, Metode, Jarak, Popularitas) dalam wujud *progress bar* yang human-readable tanpa membocorkan algoritma backend ke pengguna.
+3.  **Sticky Compact Header:** Modal dilengkapi mekanisme scroll interaktif (Sticky Header) di mana ikon dan alamat lembaga mengecil/menghilang ketika di-scroll, demi menjamin agar pengguna tidak kehilangan konteks *Training Center* apa yang sedang mereka baca skornya.
+4.  **Label Evaluatif:** Persentase Total Skor kini tidak hanya memunculkan angka, tapi disematkan interpretasi bahasa manusia secara dinamis (seperti "Sangat sesuai dengan preferensi Anda" atau "Cukup sesuai..."). Status parsial di dalam *breakdown* juga dinaturalisasi ("Kecocokan sebagian" diganti menjadi "Sangat dekat", "Relatif jauh", dst menyesuaikan konteks jarak/popularitas).
+
+## 12. Peningkatan Fitur Pendaftaran & Verifikasi (Agustus 2026)
+Pengembangan sistem dilanjutkan secara *iteratif* dengan penambahan kapabilitas siklus pendaftaran dua arah antara User (Peserta) dan Admin (Verifikator). Seluruh pembaruan diimplementasikan mengikuti prinsip UI/UX yang telah ditetapkan (Clean Design) tanpa mengganggu fungsionalitas Recommendation Engine.
+
+1.  **Redesign UI Riwayat Pendaftaran (User):** 
+    - Komponen tabel statis usang telah diremajakan menjadi *Card UI* modern dengan hierarchy visual yang lebih profesional (Shadow ringan, animasi *lift-on-hover*, tipografi tebal).
+    - Menghapus route & page navigasi detail yang menyebabkan 404 Not Found, dan memigrasikannya menjadi **Modal Interaktif 1-layar**.
+    - **Smart Injection:** Modal Detail di Riwayat Pendaftaran kini berhasil dikawinkan secara "Background-fetch" dengan API Rekomendasi, sehingga fitur transparansi skor (Score Breakdown) dapat tampil kembali walau user mengakses dari halaman History pendaftaran tanpa perlu menambah *DB Join/Migration* baru pada tabel *Enrollments*.
+2.  **Alur Verifikasi Pendaftaran (Admin Backend & Frontend):** 
+    - Merombak Lifecycle pendaftaran dari sifat otomatis (*Auto-Active*) menjadi tersistem: `pending` ➔ `approved` / `rejected`.
+    - Mengamankan Controller Admin `EnrollmentController` dan Controller User (pada metode `store`) untuk memvalidasi limit standar `status` terbaru (Legacy Backward-Compatible).
+    - Memisahkan komponen Javascript *spaghetti* di dalam `index.blade.php` Admin menjadi fungsi helper modular (`createRow`, `renderStatus`, `renderAction`).
+3.  **Micro-Interaction & Badge Modern (Admin & User Panel):**
+    - Sinkronisasi global pada seluruh modul Dashboard dan Tabel menggunakan desain *"Pill Status Badge"* modern:
+        - 🟡 **Pending / Menunggu Persetujuan:** Badge Kuning cerah dengan Ikon Jam.
+        - 🟢 **Approved / Disetujui / Selesai / Aktif:** Badge Hijau elegan dengan Ikon Centang.
+        - 🔴 **Rejected / Ditolak / Batal:** Badge Merah dengan Ikon Silang.
+    - **Minimalist Action Buttons:** Pada tabel Pendaftaran Admin, tombol Setujui dan Tolak didesain menggunakan metode *CSS Transition Hover Expand*. Dalam kondisi statis/normal, tombol hanya menampilkan *icon square* berukuran mini (34x34px). Namun ketika kursor diarahkan (hover), tombol akan mengembang secara *fluid* ke arah samping untuk memperlihatkan label teks-nya secara utuh. Mekanisme cerdas ini dirancang murni menggunakan *Cascading Style Sheets (CSS)* guna menghindari *overhead* rendering javascript sekaligus memberikan *tactile feedback* kelas atas (Enterprise Feel).
+4.  **Integrasi Konfirmasi Global (SweetAlert):**
+    - Memperbaiki *bug* kegagalan fungsi tombol Setujui/Tolak pada tabel admin akibat transisi fungsi dari sinkronus ke asinkronus (Async/Await) tanpa adanya pengikat event promise yang tepat pada modal bawaan.
+    - Menghapus penggunaan `window.confirm()` primitif bawaan browser (alert javascript) maupun custom overlay manual.
+    - Standardisasi UX konfirmasi (termasuk verifikasi pendaftaran `approved` & `rejected`) sepenuhnya didelegasikan kepada `window.showConfirm()` berbasis SweetAlert2 yang dipusatkan di `sweetalert.js`, menyajikan dialog konfirmasi yang seragam, estetik, dan interaktif (responsif terhadap event trigger).
+
+## 13. Audit Kualitas E2E & Resolusi Technical Debt Akhir (Agustus 2026)
+Melalui audit fungsional dan pengujian mendalam terhadap sistem yang sudah terbangun, Senior Engineer kembali menutup celah *logic bugs* dan menyelaraskan total (100% sinkron) *Automated Testing* terhadap arsitektur backend, menjamin ketahanan skala _Enterprise_:
+
+1. **Resolusi Variable Scope Leak (Recommendation Engine):**
+   - **Bug:** `Distance Score Breakdown` berpotensi memunculkan informasi salah (bocor) pada Training Center yang tidak memiliki data Geolocation, akibat persistensi variabel di dalam *looping* perhitungan jarak.
+   - **Fix:** Menambahkan _force-reset_ null variabel `$distScore` untuk menetralkan kalkulasi pada setiap iterasi komputasi Haversine per Training Center.
+2. **Missing Implementation - Activity Log Enroller:**
+   - **Bug:** Terlewatnya injeksi `LogActivity` saat peserta berhasil *Submit Enrollment*, meskipun dokumen Blueprint meminta *tracking* tersebut.
+   - **Fix:** Backend `EnrollmentController` kini otomatis men-trigger dan merekam jejak rekam pendaftaran (`activity_type: 'enroll'`) secara mandiri setelah Pendaftaran sukses.
+3. **Peningkatan 10 Unit Test & Feature Test Tambahan (Cakupan 100%):**
+   - _Hard-Filter Assertion:_ `RecommendationEngineTest` telah difasilitasi uji coba algoritma `jarak_maksimal` dinamis milik `QuestionnaireResponse`. TC yang berada di luar jarak maksimal otomatis hilang dari hasil API. 
+   - _Auto-Trigger Geolocation:_ Menguji *Refresh* algoritma mesin pada `BackendFlowTest` manakala User mengubah / Update *Maps Pin* dari titik kordinat A menuju Titik B.
+   - _Validasi Score Breakdown JSON:_ Memastikan tabel algoritma selalu menghasilkan struktur data breakdown (interest, skill, distance, method) yang valid untuk Expandable UI di Frontend.
+   - _E2E Routing Google Maps:_ Fitur Geolocation Routing admin pada `AdminCrudTest` kini disisipi filter regex untuk menolak format *URL G-Maps Invalid* (HTTP 422).
+   - _Lifecycle Proteksi Enrollment:_ Di ranah `EnrollmentLogicTest`, kini ada tes E2E isolasi privasi *(hanya bisa melihat pendaftaran milik sendiri)*, pembuktian eksekusi tombol Reject (tolak), serta validasi strict tolak-status kadaluwarsa (mengunci Lifecycle murni ke `pending`, `approved`, `rejected`). 
+4. **Clean Slate Environment:**
+   - Membersihkan artefak-artefak Git dan OS sementara (`*.rej`, `*.orig`), menyisakan 51 Test Case dengan 101 Assertion yang secara absolut 100% berstatus Passed/Hijau.

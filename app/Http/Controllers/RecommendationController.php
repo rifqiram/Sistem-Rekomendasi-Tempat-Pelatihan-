@@ -28,6 +28,7 @@ class RecommendationController extends Controller
                 'training_center' => $tc,
                 'score' => (float) $rec->score,
                 'distance' => $rec->distance !== null ? (float) $rec->distance : null,
+                'score_breakdown' => $rec->score_breakdown ? json_decode($rec->score_breakdown, true) : null,
                 'rank' => $rec->rank,
                 'jumlah_pelatihan' => $tc ? $tc->pelatihans->count() : 0,
                 'daftar_pelatihan' => $tc ? $tc->pelatihans : []

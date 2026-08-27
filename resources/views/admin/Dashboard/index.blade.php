@@ -233,16 +233,22 @@
                 const dateOptions = { day: 'numeric', month: 'short', year: 'numeric' };
                 const date = new Date(item.created_at).toLocaleDateString('id-ID', dateOptions);
 
-                // Modern Status Badges
+                // Map old legacy DB status to new workflow status
+                let dbStatus = item.status;
+                if (dbStatus === 'terdaftar') dbStatus = 'pending';
+                if (dbStatus === 'aktif' || dbStatus === 'selesai') dbStatus = 'approved';
+                if (dbStatus === 'batal') dbStatus = 'rejected';
+
+                // Modern Status Badges mapping
                 let statusBadge = '';
-                if(item.status === 'terdaftar' || item.status === 'aktif') {
-                    statusBadge = '<span class="badge rounded-pill" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2);">Aktif</span>';
-                } else if(item.status === 'selesai') {
-                    statusBadge = '<span class="badge rounded-pill" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2);">Selesai</span>';
-                } else if(item.status === 'batal') {
-                    statusBadge = '<span class="badge rounded-pill" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);">Batal</span>';
+                if (dbStatus === 'pending') {
+                    statusBadge = '<span class="badge bg-warning text-dark rounded-pill px-3 py-1 fw-semibold"><i class="fas fa-clock me-1"></i> Pending</span>';
+                } else if (dbStatus === 'approved') {
+                    statusBadge = '<span class="badge bg-success rounded-pill px-3 py-1 fw-semibold"><i class="fas fa-check-circle me-1"></i> Disetujui</span>';
+                } else if (dbStatus === 'rejected') {
+                    statusBadge = '<span class="badge bg-danger rounded-pill px-3 py-1 fw-semibold"><i class="fas fa-times-circle me-1"></i> Ditolak</span>';
                 } else {
-                    statusBadge = `<span class="badge bg-secondary rounded-pill">${item.status}</span>`;
+                    statusBadge = `<span class="badge bg-secondary rounded-pill px-3 py-1">${item.status}</span>`;
                 }
 
                 const tr = `

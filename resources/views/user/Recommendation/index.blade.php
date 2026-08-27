@@ -157,6 +157,14 @@
         overflow: hidden;
     }
 
+    .modal-header-sticky {
+        position: sticky;
+        top: 0;
+        z-index: 1020;
+        background: var(--bg-color);
+        transition: padding 0.3s ease, box-shadow 0.3s ease;
+    }
+
     .modal-header-custom {
         background: linear-gradient(135deg, rgba(79, 70, 229, 0.05), rgba(59, 130, 246, 0.05));
         padding: 2rem 1.5rem 1.5rem;
@@ -178,12 +186,39 @@
         justify-content: center;
         color: var(--text-muted);
         transition: all 0.2s;
-        z-index: 10;
+        z-index: 1056; /* Harus lebih tinggi dari sticky header (1020) */
     }
 
     .modal-close-btn:hover {
         background: var(--bg-color);
         color: var(--danger-color);
+    }
+
+    .modal-header-sticky.is-scrolled {
+        padding: 1rem 1.5rem !important;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(8px);
+        box-shadow: var(--shadow-sm);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .modal-header-sticky.is-scrolled .tc-icon-wrapper {
+        display: none !important;
+    }
+
+    .modal-header-sticky.is-scrolled .tc-address-text {
+        display: none !important;
+    }
+
+    .modal-header-sticky.is-scrolled .tc-title-text {
+        font-size: 1.1rem;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .modal-header-sticky.is-scrolled .tc-badges-wrapper {
+        transform: scale(0.85);
+        transform-origin: center;
+        margin-top: 0.25rem;
     }
 
     /* List Pelatihan dalam Modal */
@@ -206,7 +241,6 @@
         margin-bottom: 1rem;
     }
 </style>
-@endpush
 
 @section('content')
 
@@ -251,35 +285,46 @@
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
-            <button type="button" class="modal-close-btn shadow-sm" data-bs-dismiss="modal">
-                <i class="fas fa-times"></i>
-            </button>
-
-            <div class="modal-header-custom text-center">
-                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow-sm" style="width: 64px; height: 64px; background: white; color: var(--primary-color); font-size: 1.5rem;">
+            <div class="modal-header-custom text-center modal-header-sticky" id="modalHeaderContent">
+                <button type="button" class="modal-close-btn shadow-sm" data-bs-dismiss="modal" aria-label="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow-sm tc-icon-wrapper" style="width: 64px; height: 64px; background: white; color: var(--primary-color); font-size: 1.5rem; transition: all 0.3s ease;">
                     <i class="fas fa-building"></i>
                 </div>
-                <h3 class="fw-bold mb-2" style="color: var(--text-main);" id="modalTcName">Nama Lembaga</h3>
-                <p class="text-muted small mb-3 mx-auto" style="max-width: 500px;" id="modalTcAddress">
+                <h3 class="fw-bold mb-1 tc-title-text" style="color: var(--text-main); transition: font-size 0.3s ease;" id="modalTcName">Nama Lembaga</h3>
+                <p class="text-muted small mb-3 mx-auto tc-address-text" style="max-width: 500px; transition: all 0.3s ease;" id="modalTcAddress">
                     <i class="fas fa-map-marker-alt text-danger me-1"></i> Alamat Lengkap
                 </p>
-                <div class="d-flex justify-content-center gap-2">
+                <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 tc-badges-wrapper">
                     <span class="badge rounded-pill px-3 py-2" style="background-color: rgba(16, 185, 129, 0.1); color: var(--secondary-color); border: 1px solid rgba(16,185,129,0.2);" id="modalTcScore">
                         <i class="fas fa-percentage me-1"></i> Skor: 0%
                     </span>
                     <span class="badge rounded-pill px-3 py-2" style="background-color: rgba(59, 130, 246, 0.1); color: var(--info-color); border: 1px solid rgba(59,130,246,0.2);" id="modalTcDistance">
                         <i class="fas fa-location-arrow me-1"></i> Jarak: 0 km
                     </span>
+                    <button class="btn btn-sm rounded-pill fw-bold d-inline-flex align-items-center justify-content-center gap-2 px-3 py-1"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#scoreBreakdownCollapse"
+                            aria-expanded="false"
+                            aria-controls="scoreBreakdownCollapse"
+                            id="btnToggleBreakdown"
+                            style="border: 1px dashed var(--primary-color); background-color: rgba(79, 70, 229, 0.05); color: var(--primary-color); font-size: 0.75rem;">
+                        <i class="fas fa-plus transition-icon"></i> <span>Lihat perhitungan skor</span>
+                    </button>
                 </div>
             </div>
 
-            <div class="modal-body p-4 p-md-5" style="background-color: var(--bg-color);">
-                <div id="btnMapsContainer" class="d-none text-center mb-4">
+            <div class="modal-body p-4 p-md-5" id="modalBodyScrollable" style="background-color: var(--bg-color);">
+                @include('components.score-breakdown')
+
+                <div id="btnMapsContainer" class="d-none text-center mb-4 mt-2">
                     <a href="#" target="_blank" id="btnOpenMaps" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
                         <i class="fas fa-map-pin me-1"></i> Lihat Lokasi (Google Maps)
                     </a>
                 </div>
-
+                </br>
                 <div class="d-flex align-items-center mb-3 gap-2">
                     <i class="fas fa-book-open text-primary"></i>
                     <h6 class="fw-bold mb-0" style="color: var(--text-main);">Daftar Pelatihan Tersedia</h6>
@@ -382,6 +427,9 @@
         const btnContainer = document.getElementById('btnMapsContainer');
         const btnOpenMaps = document.getElementById('btnOpenMaps');
 
+        // Render Score Breakdown
+        renderScoreBreakdown(item.score_breakdown, item.score);
+
         // Conditional Rendering
         if (tc.google_maps_url) {
             btnOpenMaps.href = tc.google_maps_url;
@@ -391,6 +439,11 @@
             btnOpenMaps.href = "#";
             btnContainer.classList.add('d-none');
         }
+
+        // Render Score Breakdown - MUST WAIT for modal content to be ready
+        setTimeout(() => {
+            renderScoreBreakdown(item.score_breakdown, item.score);
+        }, 50);
 
         const listContainer = document.getElementById('modalPelatihanList');
         listContainer.innerHTML = '';
@@ -474,6 +527,147 @@
                 }
             }
         );
+    }
+</script>
+<script>
+    // Breakdown Logic
+    document.addEventListener('DOMContentLoaded', () => {
+        // We use event delegation on document body to handle dynamically injected content via collapse
+        document.body.addEventListener('show.bs.collapse', function(event) {
+            if (event.target.id === 'scoreBreakdownCollapse') {
+                const btnToggle = document.getElementById('btnToggleBreakdown');
+                if(btnToggle) btnToggle.innerHTML = '<i class="fas fa-minus transition-icon"></i> <span>Sembunyikan perhitungan</span>';
+            }
+        });
+
+        document.body.addEventListener('hide.bs.collapse', function(event) {
+            if (event.target.id === 'scoreBreakdownCollapse') {
+                const btnToggle = document.getElementById('btnToggleBreakdown');
+                if(btnToggle) btnToggle.innerHTML = '<i class="fas fa-plus transition-icon"></i> <span>Lihat perhitungan skor</span>';
+            }
+        });
+
+        // Bugfix: Ensure modal remains scrollable if content overflows after accordion expands
+        // Sticky Header scroll logic
+        const modalBodyEl = document.getElementById('modalBodyScrollable');
+        if(modalBodyEl) {
+            modalBodyEl.addEventListener('scroll', function() {
+                const header = document.getElementById('modalHeaderContent');
+                if(!header) return;
+                
+                if (this.scrollTop > 10) {
+                    header.classList.add('is-scrolled');
+                } else {
+                    header.classList.remove('is-scrolled');
+                }
+            });
+        }
+
+        // Bugfix: Ensure modal remains scrollable if content overflows after accordion expands
+        document.body.addEventListener('shown.bs.collapse', function(event) {
+            if (event.target.id === 'scoreBreakdownCollapse') {
+                const modal = document.getElementById('detailModal');
+                // Auto scroll sedikit agar breakdown terlihat
+                if (modal) {
+                    const breakdownContainer = document.querySelector('.score-breakdown-container');
+                    if(breakdownContainer) {
+                         breakdownContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    }
+                }
+            }
+        });
+    });
+
+    function renderScoreBreakdown(scoreBreakdown, finalScore) {
+        const container = document.getElementById('breakdownContent');
+        const breakdownContainer = document.querySelector('.score-breakdown-container');
+        let interpretation = '';
+        if (finalScore >= 90) interpretation = 'Sangat sesuai dengan preferensi Anda';
+        else if (finalScore >= 75) interpretation = 'Sesuai dengan sebagian besar preferensi Anda';
+        else if (finalScore >= 60) interpretation = 'Cukup sesuai dengan preferensi Anda';
+        else interpretation = 'Kurang sesuai dengan preferensi Anda';
+
+        document.getElementById('breakdownTotalScore').innerHTML = `
+            <div class="text-end">
+                <div>${finalScore}%</div>
+                <div class="text-muted fw-normal mt-1" style="font-size: 0.75rem;">${interpretation}</div>
+            </div>
+        `;
+        
+        if (!scoreBreakdown) {
+            breakdownContainer.classList.add('d-none');
+            return;
+        }
+        
+        breakdownContainer.classList.remove('d-none');
+        container.innerHTML = '';
+        
+        const factors = [
+            { key: 'interest', title: 'Bidang Pelatihan' },
+            { key: 'skill', title: 'Tingkat Keahlian' },
+            { key: 'method', title: 'Metode Pelatihan' },
+            { key: 'popularity', title: 'Popularitas' },
+            { key: 'distance', title: 'Jarak' }
+        ];
+        
+        factors.forEach(f => {
+            const data = scoreBreakdown[f.key];
+            if (!data) return;
+            
+            let statusIcon = '';
+            let statusClass = '';
+            let statusText = '';
+            let barColor = '';
+            
+            if (data.status === 'match') {
+                statusIcon = '<i class="fas fa-check"></i>';
+                statusClass = 'text-success';
+                if(f.key === 'interest' || f.key === 'skill') statusText = 'Sangat sesuai';
+                else if(f.key === 'method') statusText = 'Sesuai';
+                else if(f.key === 'popularity') statusText = 'Sangat populer';
+                else if(f.key === 'distance') statusText = 'Sangat dekat';
+                else statusText = 'Sangat sesuai';
+                barColor = 'bg-success';
+            } else if (data.status === 'partial') {
+                statusIcon = '<i class="fas fa-adjust"></i>';
+                statusClass = 'text-warning';
+                if(f.key === 'interest' || f.key === 'skill') statusText = 'Cukup sesuai';
+                else if(f.key === 'method') statusText = 'Sebagian sesuai';
+                else if(f.key === 'popularity') statusText = 'Cukup populer';
+                else if(f.key === 'distance') statusText = 'Cukup dekat';
+                else statusText = 'Kecocokan sebagian';
+                barColor = 'bg-warning';
+            } else {
+                statusIcon = '<i class="far fa-circle"></i>';
+                statusClass = 'text-muted';
+                if(f.key === 'interest' || f.key === 'skill' || f.key === 'method') statusText = 'Tidak sesuai';
+                else if(f.key === 'popularity') statusText = 'Popularitas rendah';
+                else if(f.key === 'distance') statusText = 'Relatif jauh';
+                else statusText = 'Tidak menambah skor';
+                barColor = 'bg-secondary';
+            }
+            
+            const percent = (data.score / data.max) * 100;
+            
+            const html = `
+                <div class="breakdown-item">
+                    <div class="d-flex justify-content-between align-items-end mb-1">
+                        <div>
+                            <div class="fw-bold text-dark small">${f.title}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">${data.label}</div>
+                        </div>
+                        <div class="fw-bold small" style="color: var(--text-main);">${data.score} / ${data.max}</div>
+                    </div>
+                    <div class="progress" style="height: 6px; background-color: var(--border-color);">
+                        <div class="progress-bar ${barColor}" role="progressbar" style="width: ${percent}%" aria-valuenow="${data.score}" aria-valuemin="0" aria-valuemax="${data.max}"></div>
+                    </div>
+                    <div class="text-end mt-1 ${statusClass}" style="font-size: 0.75rem; font-weight: 600;">
+                        ${statusIcon} ${statusText}
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', html);
+        });
     }
 </script>
 @endpush
