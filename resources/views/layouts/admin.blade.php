@@ -339,8 +339,5 @@
     </script>
 
     @stack('scripts')
-    @if(app()->isLocal() || config('app.debug'))
-        @include('components.ux-audit')
-    @endif
 </body>
 </html>

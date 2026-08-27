@@ -296,6 +296,9 @@
                 <p class="text-muted small mb-3 mx-auto tc-address-text" style="max-width: 500px; transition: all 0.3s ease;" id="modalTcAddress">
                     <i class="fas fa-map-marker-alt text-danger me-1"></i> Alamat Lengkap
                 </p>
+                <p class="text-muted small mb-3 mx-auto d-none" style="max-width: 600px;" id="modalTcDeskripsi">
+                    <!-- Deskripsi TC dirender di sini -->
+                </p>
                 <div class="d-flex flex-wrap justify-content-center align-items-center gap-2 tc-badges-wrapper">
                     <span class="badge rounded-pill px-3 py-2" style="background-color: rgba(16, 185, 129, 0.1); color: var(--secondary-color); border: 1px solid rgba(16,185,129,0.2);" id="modalTcScore">
                         <i class="fas fa-percentage me-1"></i> Skor: 0%
@@ -420,6 +423,16 @@
         const tc = item.training_center;
         document.getElementById('modalTcName').textContent = tc.nama;
         document.getElementById('modalTcAddress').innerHTML = `<i class="fas fa-map-marker-alt text-danger me-1"></i> ${tc.alamat}`;
+
+        const descEl = document.getElementById('modalTcDeskripsi');
+        if (tc.deskripsi) {
+            descEl.textContent = tc.deskripsi;
+            descEl.classList.remove('d-none');
+        } else {
+            descEl.textContent = '';
+            descEl.classList.add('d-none');
+        }
+
         document.getElementById('modalTcScore').innerHTML = `<i class="fas fa-percentage me-1"></i> Kecocokan: ${item.score}%`;
         document.getElementById('modalTcDistance').innerHTML = item.distance ? `<i class="fas fa-location-arrow me-1"></i> Jarak: ${item.distance.toFixed(1)} km` : '<i class="fas fa-location-arrow me-1"></i> Jarak N/A';
 
@@ -473,7 +486,8 @@
                                 <span><i class="fas fa-tag me-1 opacity-75"></i>${pel.interest_category || 'Umum'}</span>
                                 <span><i class="fas fa-chalkboard-teacher me-1 opacity-75"></i>${pel.method || 'Offline'}</span>
                             </div>
-                            <span class="badge rounded-pill px-2 py-1" style="${skillBadgeStyle}">${pel.required_skill}</span>
+                            <span class="badge rounded-pill px-2 py-1 mb-2 d-inline-block" style="${skillBadgeStyle}">${pel.required_skill}</span>
+                            <p class="text-muted small mb-0 mt-1" style="max-width: 500px;">${pel.deskripsi || ''}</p>
                         </div>
                         <button class="btn fw-bold px-4 rounded-pill shadow-sm flex-shrink-0" onclick="enroll(${pel.id}, '${pel.judul}', this)" style="background-color: var(--primary-color); color: white; transition: all 0.2s;">
                             <i class="fas fa-paper-plane me-1"></i> Daftar

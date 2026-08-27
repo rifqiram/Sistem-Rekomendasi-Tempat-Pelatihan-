@@ -306,5 +306,21 @@ Melalui audit fungsional dan pengujian mendalam terhadap sistem yang sudah terba
    - _Validasi Score Breakdown JSON:_ Memastikan tabel algoritma selalu menghasilkan struktur data breakdown (interest, skill, distance, method) yang valid untuk Expandable UI di Frontend.
    - _E2E Routing Google Maps:_ Fitur Geolocation Routing admin pada `AdminCrudTest` kini disisipi filter regex untuk menolak format *URL G-Maps Invalid* (HTTP 422).
    - _Lifecycle Proteksi Enrollment:_ Di ranah `EnrollmentLogicTest`, kini ada tes E2E isolasi privasi *(hanya bisa melihat pendaftaran milik sendiri)*, pembuktian eksekusi tombol Reject (tolak), serta validasi strict tolak-status kadaluwarsa (mengunci Lifecycle murni ke `pending`, `approved`, `rejected`). 
+## 14. Patch Notes & Resolusi Black Box Testing (September 2026)
+Melalui iterasi pengujian *Black Box* manual dan audit keamanan ketat, sejumlah celah UX dan kerentanan *Critical* telah diidentifikasi dan ditambal secara permanen:
+
+1. **Resolusi Celah Keamanan Autentikasi (Blocked User Login):**
+   - **Bug (CRITICAL):** Pengguna yang telah dinonaktifkan (di-block) oleh Administrator (`is_active = false`) ternyata masih bisa melewati gerbang *login* karena Controller otorisasi hanya memvalidasi kombinasi *email* dan *password*, yang berakibat lolosnya penerbitan *Token Sanctum* baru.
+   - **Fix:** Menyuntikkan lapisan verifikasi `!$user->is_active` mutlak ke dalam `AuthController@login`. Jika akun diblokir, sistem menolak keras dengan respons HTTP 403 Forbidden. Ditambahkan pula skenario *Unit Test* (`test_blocked_user_cannot_login`) guna mengunci integritas ini dari regresi di masa depan.
+2. **Penambalan Celah Interceptor Token (Force Logout UI):**
+   - **Bug (CRITICAL):** Meskipun *Middleware SystemAuth* backend sudah merespons dengan HTTP 403 bagi *User Blocked* yang memaksa masuk via URL lama, pelayan *Frontend Fetch* (`api.js`) hanya melempar _error_ ke konsol (*silent fail*) tanpa membunuh *Token*. Hal ini memicu _infinite redirect_ pada Dashboard.
+   - **Fix:** Membedah asinkronus `window.authFetch`. Kini, bila API mengembalikan HTTP 403 berserta pesan JSON bernada "dinonaktifkan", _Frontend_ akan men-_trigger_ fungsi `window.clearApiToken()` untuk mencabut Token lokal dan memaksa User terlempar kembali ke gerbang `/user/login`.
+3. **Penyempurnaan Labelisasi Dashboard & Lokalisasi:**
+   - **Bug:** Kesalahan pelabelan metrik Dashboard Admin yang menampilkan "Pencari Kerja" untuk mengalkulasi nilai `Users::count()` (seharusnya pengguna keseluruhan), serta bocornya pesan *error* validasi Bahasa Inggris saat mendaftar dengan email duplikat.
+   - **Fix:** Menormalisasi istilah dasbor menjadi **"Pengguna"**. Sekaligus meng-_override_ _method_ `messages()` pada `RegisterRequest` sehingga notifikasi yang dikembalikan ke UI 100% berbahasa Indonesia ("Alamat email ini sudah digunakan...").
+4. **Optimalisasi Presentasi UI (Display Deskripsi):**
+   - **Bug:** Absennya visibilitas kolom informasi `deskripsi` milik _Training Center_ dan _Pelatihan_ pada UI Modal *Recommendation*, kendati datanya telah dimuntahkan oleh agregator API.
+   - **Fix:** Memperkaya HTML DOM Injection Javascript pada antarmuka *User* untuk merender properti teks `tc.deskripsi` (lengkap dengan manajemen kelas utilitas `d-none` untuk penanganan string _Null_) serta menampilkan ringkasan `pel.deskripsi` secara rapi di bawah label keahlian.
+
 4. **Clean Slate Environment:**
-   - Membersihkan artefak-artefak Git dan OS sementara (`*.rej`, `*.orig`), menyisakan 51 Test Case dengan 101 Assertion yang secara absolut 100% berstatus Passed/Hijau.
+   - Membersihkan artefak-artefak Git dan OS sementara (`*.rej`, `*.orig`), menyisakan 52 Test Case dengan 103 Assertion yang secara absolut 100% berstatus Passed/Hijau.

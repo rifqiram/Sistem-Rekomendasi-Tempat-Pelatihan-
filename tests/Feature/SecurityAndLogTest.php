@@ -55,6 +55,24 @@ class SecurityAndLogTest extends TestCase
                  ->assertJsonPath('message', 'Akun Anda dinonaktifkan oleh administrator.');
     }
 
+    public function test_blocked_user_cannot_login()
+    {
+        $password = 'password123';
+        $blockedUser = User::factory()->create([
+            'role' => 'user',
+            'is_active' => false,
+            'password' => bcrypt($password)
+        ]);
+
+        $response = $this->postJson('/api/login', [
+            'email' => $blockedUser->email,
+            'password' => $password
+        ]);
+
+        $response->assertStatus(403)
+                 ->assertJsonPath('message', 'Akun Anda dinonaktifkan oleh administrator.');
+    }
+
     public function test_unauthorized_when_no_token_provided()
     {
         // Not acting as anyone, no token

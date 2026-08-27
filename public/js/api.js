@@ -53,12 +53,21 @@ window.authFetch = function (url, options = {}) {
             window.location.href = '/user/login';
             return Promise.reject('Unauthorized (Token Expired)');
         }
-        
+
         if (response.status === 403) {
             console.error('Forbidden access to ' + url);
+            // SystemAuth return specific message if user is disabled
+            // Check if this is a JSON response to read the message, or just logout
+            response.clone().json().then(data => {
+                if (data && data.message && data.message.includes('dinonaktifkan')) {
+                    window.clearApiToken();
+                    window.location.href = '/user/login';
+                }
+            }).catch(() => {});
+
             return Promise.reject('Forbidden (No Access)');
         }
-        
+
         return response;
     });
 };

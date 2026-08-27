@@ -138,7 +138,7 @@
             </div>
             <div class="metric-info">
                 <span class="metric-value" id="stat-users">0</span>
-                <span class="metric-label">Pencari Kerja</span>
+                <span class="metric-label">Pengguna</span>
             </div>
             <i class="fas fa-chevron-right metric-link-indicator"></i>
         </a>

@@ -22,6 +22,10 @@ class AuthController extends Controller
             return $this->errorResponse('Email atau password salah', 401);
         }
 
+        if (! $user->is_active) {
+            return $this->errorResponse('Akun Anda dinonaktifkan oleh administrator.', 403);
+        }
+
         $token = $user->createToken('api-token')->plainTextToken;
 
         LogActivity::create([
