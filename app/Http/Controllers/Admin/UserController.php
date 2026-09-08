@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\LogActivity;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -54,6 +55,12 @@ class UserController extends Controller
         ]);
 
         $user->update(['is_active' => $data['is_active']]);
+
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'update_user_status',
+            'details' => 'Mengubah status user ID: ' . $id . ' menjadi ' . ($data['is_active'] ? 'Aktif' : 'Non-Aktif'),
+        ]);
 
         return $this->successResponse($user, 'Status user berhasil diperbarui.');
     }

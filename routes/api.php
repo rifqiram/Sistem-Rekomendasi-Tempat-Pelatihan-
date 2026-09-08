@@ -39,6 +39,10 @@ Route::middleware('auth.token')->group(function () {
     // Training Center
     Route::apiResource('/training-centers', TrainingCenterController::class);
 
+    
+    // Trending Trainings (User Dashboard)
+    Route::get('/trending-trainings', [\App\Http\Controllers\PelatihanController::class, 'trending']);
+
     // Recommendation (Hanya baca hasil dari tabel Recommendation)
     Route::get('/recommendations', [RecommendationController::class, 'index']);
 

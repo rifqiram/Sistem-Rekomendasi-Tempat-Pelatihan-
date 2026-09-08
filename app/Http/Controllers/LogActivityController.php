@@ -33,7 +33,7 @@ class LogActivityController extends Controller
 
         $logs = LogActivity::with(['user', 'trainingCenter', 'pelatihan'])
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(20);
 
         return $this->successResponse($logs, 'Log aktivitas berhasil diambil');
     }

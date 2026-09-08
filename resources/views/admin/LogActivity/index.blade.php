@@ -98,6 +98,10 @@
                     </table>
                 </div>
             </div>
+            {{-- Pagination --}}
+            <div class="card-footer bg-transparent border-top-0 d-flex justify-content-end py-3 px-4">
+                <ul class="pagination pagination-sm mb-0" id="paginationLinks"></ul>
+            </div>
         </div>
     </div>
 </div>
@@ -111,7 +115,10 @@
         await loadData();
     });
 
-    async function loadData() {
+    let currentPage = 1;
+
+    async function loadData(page = 1) {
+        currentPage = page;
         const tbody = document.getElementById('log-table-body');
         const btnRefresh = document.getElementById('btnRefresh');
 
@@ -125,13 +132,29 @@
             document.getElementById('checkAll').checked = false;
             updateDeleteButton();
 
-            const res = await window.authFetch(window.apiBase + '/admin/log-activities');
-            const parsed = await window.parseApi(res);
-
-            // Handle potential array wrapping
-            logsData = Array.isArray(parsed) ? parsed : (parsed.data || []);
+            const res = await window.authFetch(window.apiBase + `/admin/log-activities?page=${page}`);
+            const json = await res.json();
+            
+            // Bypass parseApi agar kita bisa melihat struktur asli paginator
+            // Controller me-return $this->successResponse($logs) -> json.data berisi Paginator
+            
+            let meta = null;
+            
+            // Kita cetak ke console untuk debugging pasti jika dibutuhkan
+            console.log("Raw JSON:", json);
+            
+            if (json && json.data && typeof json.data === 'object') {
+                if (json.data.current_page !== undefined) {
+                    meta = json.data;
+                    logsData = json.data.data || [];
+                } else {
+                    logsData = Array.isArray(json.data) ? json.data : [];
+                }
+            }
 
             tbody.innerHTML = '';
+
+            renderPagination(meta);
 
             if (!logsData || logsData.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted py-5"><i class="fas fa-inbox fs-2 mb-3 opacity-25 d-block"></i>Belum ada log aktivitas terdeteksi.</td></tr>`;
@@ -146,12 +169,23 @@
 
                 const user = item.user ? item.user.name : 'System/Unknown';
                 let context = '<span class="text-muted small fst-italic">Tanpa Konteks Khusus</span>';
+                if (item.details) {
+                    context = `<div class="mb-1"><span class="text-secondary small">${item.details}</span></div>`;
+                }
 
                 if (item.training_center) {
-                    context = `<div class="mb-1"><i class="fas fa-building text-muted me-1 small opacity-75"></i> ${item.training_center.nama}</div>`;
+                    if(item.details) {
+                        context += `<div class="mb-1"><i class="fas fa-building text-muted me-1 small opacity-75"></i> ${item.training_center.nama}</div>`;
+                    } else {
+                        context = `<div class="mb-1"><i class="fas fa-building text-muted me-1 small opacity-75"></i> ${item.training_center.nama}</div>`;
+                    }
                 }
                 if (item.pelatihan) {
-                    context += `<div><i class="fas fa-book text-muted me-1 small opacity-75"></i> ${item.pelatihan.judul}</div>`;
+                    if (context.includes('Tanpa Konteks')) {
+                        context = `<div><i class="fas fa-book text-muted me-1 small opacity-75"></i> ${item.pelatihan.judul}</div>`;
+                    } else {
+                        context += `<div><i class="fas fa-book text-muted me-1 small opacity-75"></i> ${item.pelatihan.judul}</div>`;
+                    }
                 }
 
                 let typeBadge = '';
@@ -159,6 +193,18 @@
                     case 'login': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2);">Login</span>'; break;
                     case 'logout': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(100, 116, 139, 0.1); color: #64748b; border: 1px solid rgba(100,116,139,0.2);">Logout</span>'; break;
                     case 'enroll': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2);">Enrollment</span>'; break;
+                    case 'register': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2);">Register</span>'; break;
+                    case 'update_profile': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(139, 92, 246, 0.1); color: #8b5cf6; border: 1px solid rgba(139,92,246,0.2);">Update Profile</span>'; break;
+                    case 'update_questionnaire': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236,72,153,0.2);">Isi Kuesioner</span>'; break;
+                    case 'generate_recommendation': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid rgba(14,165,233,0.2);">Rekomendasi</span>'; break;
+                    case 'create_tc': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2);">Tambah TC</span>'; break;
+                    case 'update_tc': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2);">Update TC</span>'; break;
+                    case 'delete_tc': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);">Hapus TC</span>'; break;
+                    case 'create_pelatihan': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2);">Tambah Pelatihan</span>'; break;
+                    case 'update_pelatihan': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(59, 130, 246, 0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.2);">Update Pelatihan</span>'; break;
+                    case 'delete_pelatihan': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);">Hapus Pelatihan</span>'; break;
+                    case 'update_user_status': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(249, 115, 22, 0.1); color: #f97316; border: 1px solid rgba(249,115,22,0.2);">Status User</span>'; break;
+                    case 'update_enrollment': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.2);">Validasi Pendaftaran</span>'; break;
                     case 'view_detail': typeBadge = '<span class="badge rounded-pill" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.2);">View Detail</span>'; break;
                     default: typeBadge = `<span class="badge bg-light text-dark border rounded-pill">${item.activity_type}</span>`;
                 }
@@ -210,6 +256,50 @@
         masterCheckbox.indeterminate = someChecked && !allChecked;
 
         updateDeleteButton();
+    }
+
+    function renderPagination(meta) {
+        const links = document.getElementById('paginationLinks');
+        if (!links) return;
+
+        if (!meta || meta.last_page <= 1) {
+            links.innerHTML = '';
+            return;
+        }
+
+        let html = '';
+
+        // Previous
+        if (meta.current_page === 1) {
+            html += `<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Previous</a></li>`;
+        } else {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadData(${meta.current_page - 1})">Previous</a></li>`;
+        }
+
+        // Page numbers dengan ellipsis
+        for (let i = 1; i <= meta.last_page; i++) {
+            const inRange = i === 1 || i === meta.last_page || (i >= meta.current_page - 2 && i <= meta.current_page + 2);
+            const isEllipsis = i === meta.current_page - 3 || i === meta.current_page + 3;
+
+            if (inRange) {
+                if (i === meta.current_page) {
+                    html += `<li class="page-item active"><a class="page-link" href="#" onclick="event.preventDefault();">${i}</a></li>`;
+                } else {
+                    html += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadData(${i})">${i}</a></li>`;
+                }
+            } else if (isEllipsis) {
+                html += `<li class="page-item disabled"><a class="page-link" href="#">...</a></li>`;
+            }
+        }
+
+        // Next
+        if (meta.current_page === meta.last_page) {
+            html += `<li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Next</a></li>`;
+        } else {
+            html += `<li class="page-item"><a class="page-link" href="#" onclick="event.preventDefault(); loadData(${meta.current_page + 1})">Next</a></li>`;
+        }
+
+        links.innerHTML = html;
     }
 
     function updateDeleteButton() {

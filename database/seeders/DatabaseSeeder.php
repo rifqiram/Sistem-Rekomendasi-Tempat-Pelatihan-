@@ -24,13 +24,5 @@ class DatabaseSeeder extends Seeder
             'api_token' => 'admintoken',
             'is_active' => true,
         ]);
-
-        $this->call([
-            TrainingCenterSeeder::class,
-            PelatihanSeeder::class,
-            RecommendationScenarioSeeder::class,
-            EnrollmentSeeder::class,
-            LogActivitySeeder::class,
-        ]);
     }
 }

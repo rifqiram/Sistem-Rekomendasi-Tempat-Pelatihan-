@@ -7,6 +7,7 @@ use App\Models\Profile;
 use App\Models\QuestionnaireResponse;
 use App\Models\Recommendation;
 use App\Models\TrainingCenter;
+use App\Models\Enrollment;
 use App\Models\User;
 use App\Services\RecommendationEngine;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -51,6 +52,23 @@ class RecommendationEngineTest extends TestCase
         return $user;
     }
 
+    private function createTrainingWithPopularity(int $popularity, array $overrides = []): Pelatihan
+    {
+        $training = $this->createTraining($overrides);
+        
+        for ($i = 0; $i < $popularity; $i++) {
+            Enrollment::create([
+                'user_id' => User::factory()->create()->id,
+                'pelatihan_id' => $training->id,
+                'training_center_id' => $training->training_center_id,
+                'status' => 'approved',
+                'tanggal_daftar' => now(),
+            ]);
+        }
+        
+        return $training;
+    }
+
     private function createTraining(array $overrides = []): Pelatihan
     {
         // Pastikan Training Center ada
@@ -74,7 +92,7 @@ class RecommendationEngineTest extends TestCase
             'location' => 'Kota A',
             'required_skill' => 'Beginner',
             'priority' => 3,
-            'popularity' => 50,
+            
             'kategori' => 'IT',
             'level' => 'Beginner',
             'durasi' => '10 Jam',
@@ -251,12 +269,11 @@ class RecommendationEngineTest extends TestCase
             'longitude' => 111.3200,
         ]);
 
-        $perfectMatch = $this->createTraining([
+        $perfectMatch = $this->createTrainingWithPopularity(100, [
             'judul' => 'Perfect Match',
             'interest_category' => 'IT',
             'method' => 'Online',
             'required_skill' => 'Beginner',
-            'popularity' => 100,
             'training_center_id' => $tcPerfect->id,
         ]);
 
@@ -270,7 +287,7 @@ class RecommendationEngineTest extends TestCase
             'longitude' => 111.3300,
         ]);
 
-        $partialMatch = $this->createTraining([
+        $partialMatch = $this->createTrainingWithPopularity(10, [
             'judul' => 'Partial Match',
             // Gunakan interest "IT" (Match), tetapi method "Offline" (Mismatch -> Hard Filter drop)
             // Jadi kita pakai method "Online", skill "Beginner", tapi bidang_diminati "Bisnis" agar parsial.
@@ -287,7 +304,6 @@ class RecommendationEngineTest extends TestCase
             'interest_category' => 'IT',
             'method' => 'Online',
             'required_skill' => 'Beginner',
-            'popularity' => 10,
             'training_center_id' => $tcPartial->id,
         ]);
 
@@ -324,12 +340,11 @@ class RecommendationEngineTest extends TestCase
             'longitude' => 111.3200,
         ]);
 
-        $this->createTraining([
+        $this->createTrainingWithPopularity(100, [
             'judul' => 'Full Score Training',
             'interest_category' => 'IT',     // +35
             'method' => 'Online',            // +15
-            'required_skill' => 'Beginner',  // +20
-            'popularity' => 100,             // +(100/100)*10 = 10
+            'required_skill' => 'Beginner',  // +20             // +(100/100)*10 = 10
             'training_center_id' => $tc->id,
         ]);
 

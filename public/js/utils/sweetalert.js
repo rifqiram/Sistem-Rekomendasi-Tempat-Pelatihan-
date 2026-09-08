@@ -6,6 +6,8 @@
 // 1. Base Configuration with CSS Classes
 const ModernSwal = Swal.mixin({
     buttonsStyling: false,
+    showCancelButton: false,
+    showDenyButton: false,
     showClass: {
         popup: 'swal2-show',
         backdrop: 'swal2-backdrop-show'
@@ -79,11 +81,22 @@ window.showSuccess = (title = 'Berhasil', text = '') => {
  * Elegant error handling.
  */
 window.showError = (title = 'Terjadi Kesalahan', text = 'Silakan coba beberapa saat lagi.') => {
-    return ModernSwal.fire({
+    return Swal.fire({
         icon: 'error',
         title: title,
         text: text,
-        confirmButtonText: 'Tutup'
+        confirmButtonText: 'Tutup',
+        showConfirmButton: true,
+        showCancelButton: false,
+        showDenyButton: false,
+        customClass: {
+            popup: 'modern-swal-popup',
+            title: 'modern-swal-title',
+            htmlContainer: 'modern-swal-text',
+            confirmButton: 'modern-swal-btn modern-swal-btn-danger',
+            icon: 'modern-swal-icon',
+            actions: 'swal2-actions'
+        }
     });
 };
 
@@ -95,7 +108,9 @@ window.showWarning = (title, text) => {
         icon: 'warning',
         title: title,
         text: text,
-        confirmButtonText: 'Tutup'
+        confirmButtonText: 'Tutup',
+        showCancelButton: false,
+        showDenyButton: false
     });
 };
 
@@ -109,6 +124,8 @@ window.showLoading = (text = 'Menyimpan perubahan...') => {
         allowOutsideClick: false,
         allowEscapeKey: false,
         showConfirmButton: false,
+        showCancelButton: false,
+        showDenyButton: false,
         didOpen: () => {
             Swal.showLoading();
         },
@@ -123,12 +140,13 @@ window.showLoading = (text = 'Menyimpan perubahan...') => {
  * Show Confirmation Modal
  * General purpose confirmation.
  */
-window.showConfirm = (title, text, confirmText = 'Lanjutkan') => {
+window.showConfirm = (title, text, confirmText = 'Ya, Setujui') => {
     return ModernSwal.fire({
         icon: 'warning', // Use info or question if warning is too severe
         title: title,
         text: text,
         showCancelButton: true,
+        showDenyButton: false,
         confirmButtonText: confirmText,
         cancelButtonText: 'Batal',
         reverseButtons: true, // Primary action on the right
@@ -146,6 +164,7 @@ window.showDelete = (title = 'Hapus Data?', text = 'Data yang sudah dihapus tida
         title: title,
         text: text,
         showCancelButton: true,
+        showDenyButton: false,
         confirmButtonText: 'Hapus',
         cancelButtonText: 'Batal',
         reverseButtons: true,

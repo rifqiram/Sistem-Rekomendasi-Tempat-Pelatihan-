@@ -92,11 +92,11 @@
                 const date = new Date(item.created_at).toLocaleDateString('id-ID');
                 const badge = item.is_active
                     ? '<span class="badge bg-success"><i class="fas fa-check-circle me-1"></i> Aktif</span>'
-                    : '<span class="badge bg-danger"><i class="fas fa-ban me-1"></i> Diblokir</span>';
+                    : '<span class="badge bg-danger"><i class="fas fa-ban me-1"></i> Non-Aktif</span>';
 
                 const toggleBtnClass = item.is_active ? 'btn-danger' : 'btn-success';
                 const toggleBtnIcon = item.is_active ? 'fa-ban' : 'fa-check';
-                const toggleBtnTitle = item.is_active ? 'Blokir Akun' : 'Aktifkan Akun';
+                const toggleBtnTitle = item.is_active ? 'Non-Aktifkan Akun' : 'Aktifkan Akun';
 
                 const tr = `
                     <tr>
@@ -125,7 +125,7 @@
         document.getElementById('statusUserName').textContent = item.name;
 
         const targetStatus = !item.is_active; // kebalikan
-        document.getElementById('statusTargetText').textContent = targetStatus ? 'AKTIF (Bisa Login)' : 'DIBLOKIR (Tidak bisa masuk)';
+        document.getElementById('statusTargetText').textContent = targetStatus ? 'AKTIF (Bisa Login)' : 'NON-AKTIF (Tidak bisa masuk)';
 
         const btn = document.getElementById('btnConfirmStatus');
         btn.className = targetStatus ? 'btn btn-success' : 'btn btn-danger';

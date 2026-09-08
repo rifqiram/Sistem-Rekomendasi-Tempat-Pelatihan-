@@ -67,6 +67,11 @@ class AuthController extends Controller
 
         $token = $user->createToken('api-token')->plainTextToken;
 
+        LogActivity::create([
+            'user_id' => $user->id,
+            'activity_type' => 'register',
+        ]);
+
         return $this->successResponse([
             'token' => $token,
             'user' => new UserResource($user),

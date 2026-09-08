@@ -324,3 +324,72 @@ Melalui iterasi pengujian *Black Box* manual dan audit keamanan ketat, sejumlah 
 
 4. **Clean Slate Environment:**
    - Membersihkan artefak-artefak Git dan OS sementara (`*.rej`, `*.orig`), menyisakan 52 Test Case dengan 103 Assertion yang secara absolut 100% berstatus Passed/Hijau.
+
+## 15. Patch Notes (Oktober 2026)
+5. **Perbaikan Tampilan Tombol Konfirmasi SweetAlert:**
+   - **Bug:** Tombol konfirmasi bawaan sistem (Batal / Ya) memunculkan tombol ketiga ("No") secara tak sengaja pada seluruh modal interaksi.
+   - **Fix:** Menambal *class* CSS global `.modern-swal-btn` di `sweetalert-modern.css`. Aturan `display: inline-flex !important` sebelumnya menimpa logika `style="display: none;"` bawaan SweetAlert2 yang berfungsi menyembunyikan tombol "No" (`showDenyButton: false`). Kini ditambahkan *CSS attribute selector* khusus `[style*="display: none"]` dengan `display: none !important` untuk mengembalikan hierarki dan menghilangkan tombol tersebut secara permanen.
+
+6. **Penyempurnaan Modul Audit Log Activity:**
+   - **Masalah:** Sistem Log Activity sebelumnya hanya merekam proses *Login* dan *Logout* serta *Enrollment*. Fungsi vital seperti input preferensi pengguna, regenerasi rekomendasi, penambahan data master (TC/Pelatihan) oleh Admin, hingga manipulasi blokir status User belum tersentuh.
+   - **Fix:** Melakukan injeksi kode `LogActivity::create` terdistribusi di Controller utama: `AuthController` (Register), `ProfileController`, `QuestionnaireController`, `RecommendationEngine`, `TrainingCenterController`, `PelatihanController`, dan `Admin\UserController` serta `Admin\EnrollmentController`. 
+   - **Enhancement UI:** Menambahkan 12 variasi label (*badge*) baru di antarmuka Admin `LogActivity/index.blade.php` lengkap dengan sistem rendering atribut dinamis `item.details` untuk memperjelas konteks rekam jejak sistem secara *real-time*.
+
+7. **Penghapusan UX Audit pada Modul Auth:**
+   - **Tindakan:** Komponen `ux-audit` dihapus secara eksplisit dari `layouts/auth.blade.php`.
+   - **Alasan:** Menghilangkan panel UX Audit di halaman otentikasi agar tampilan login dan register terbebas dari *overlay debug*.
+
+8. **Penyempurnaan Copywriting (Landing Page):**
+   - **Tindakan:** Mengubah struktur tata bahasa pada `resources/views/welcome.blade.php` agar lebih baku, formal, dan profesional.
+   - **Alasan:** Menghilangkan unsur kalimat non-formal dan kata ganti personal seperti "Anda", "Peserta", dsb pada sub-judul dan elemen CTA, agar *tone of voice* sistem terasa lebih terstruktur dan kredibel sebagai _Decision Support System_ yang akademik.
+
+## 16. Patch Notes (Akhir Agustus 2026)
+1. **Perbaikan Validasi Form Kuesioner Frontend:**
+   - **Bug:** Notifikasi/peringatan (SweetAlert) ketika ada section kuesioner yang belum diisi tidak muncul saat user menekan tombol submit.
+   - **Fix:** Menghapus fungsi *legacy* `window.showWarning` pada skrip Frontend (`resources/views/user/Questionnaire/index.blade.php`) dan menggantinya dengan pemanggilan `window.showError`. Selain itu, atribut `novalidate` ditambahkan pada tag `<form>` untuk mem-bypass validasi bawaan browser (HTML5 native), sehingga logika validasi JavaScript dapat ter-trigger dengan benar dan memunculkan pop-up SweetAlert sesuai desain UX sistem.
+
+
+## 17. Refactoring Popularitas & Dashboard (September 2026)
+Pada tahapan ini, dilakukan refactoring besar-besaran terhadap kalkulasi Popularitas dan pembaruan UI Dashboard, guna menjamin integritas data dan interaktivitas:
+
+1. **Automasi Kalkulasi Popularitas (Backend):**
+   - **Bug/Technical Debt:** Sistem popularitas awalnya menggunakan skema nilai statis (0-100) yang di-*input* secara manual oleh Admin di tabel `tabel_pelatihan`. Ini menyalahi prinsip keakuratan sistem karena angka tidak berkorelasi dengan peminat asli.
+   - **Fix:** Menghapus kolom `popularity` di database (melalui _Migration_ `dropColumn`). Mengubah `RecommendationEngine` agar nilai Popularitas dipanggil dinamis melalui fungsi `withCount` dari relasi `enrollments` milik masing-masing Pelatihan dengan syarat khusus: `status = approved`.
+   - **Rule-Based Engine:** Maksimum poin `popularity` di-*cap* limit pada angka 100 agar sejalan dengan perhitungan _Weighted Scoring_.
+   - **Frontend Admin:** Input manual Popularitas dihapus, dirubah menjadi form `readonly` yang sekadar bertugas menampilkan `(X) pengguna` murni berdasarkan data aktual (Single Source of Truth). Algoritma kebal (bebas N+1 Query).
+
+2. **Dashboard Admin (Top 5 Chart):**
+   - Menambahkan Visualisasi **Grafik Popularitas Pelatihan** berbentuk diagram batang (_Bar Chart_) menggunakan `Chart.js`.
+   - Grafik disuntikkan secara aman menggunakan data balasan `GET /api/admin/stats` (_recent stats_), diurutkan secara _descending_ berdasarkan jumlah pendaftar tertinggi. Terdapat pencegahan UI (_empty state_) apabila jumlah _approved_ keseluruhan masih nol.
+
+3. **Dashboard User (Social Proof Klasemen):**
+   - Membangun API `GET /api/trending-trainings` yang terpisah (dijaga oleh Middleware _User_) untuk memaparkan _Top-5_ kelas paling dicari tanpa mengekspos _endpoint_ statistik admin.
+   - Mengombak *Grid Layout* antarmuka Dashboard User (Sisi Kiri = Progres/Aksi, Sisi Kanan = Akun/Informasi Wawasan). Menambahkan Card **"Banyak Diminati"** menggunakan gaya _Leaderboard / Klasemen_ dengan medali _ranking_ Emas, Perak, Perunggu.
+   - Menyisipkan interaksi _Gatekeeper Notification_ berwujud `SweetAlert` (bukan sekadar terlempar paksa) jika user masuk dasbor tapi kelengkapan Profil atau Kuesioner masih absen.
+
+4. **Kuesioner UX & Validasi Integritas Jarak:**
+   - Menyempurnakan pemanggilan API _SweetAlert_ pada Kuesioner agar pesan error tampil presisi menjabarkan parameter spesifik mana (e.g. *Tingkat Keahlian, Metode*) yang belum diisi dengan cetak tebal HTML (`<b>`).
+   - Menyuntikkan lapisan pelindung 3 lapis (HTML `max=100`, JS Validasi `<100`, dan validasi ketat `QuestionnaireController` `max:100`) agar user tak dapat meng-_input_ preferensi "Jarak Maksimal" melebihi limit matematis radius 100 KM.
+
+## 18. Custom Validation Message (September 2026)
+- **Bug/Technical Debt:** Munculnya pesan peringatan campuran (*English-Indonesian*) dari _core_ Laravel validator ketika Administrator melakukan input tanggal kalender terbalik, yakni "The tanggal selesai field must be a date after or equal to tanggal mulai".
+- **Fix:** Melakukan kustomisasi (override) parameter kedua pada `$request->validate()` di `PelatihanController` (method `store` dan `update`). Pesan di-translate menjadi lebih deskriptif: *"Tanggal selesai tidak boleh lebih awal dari tanggal mulai"*.
+
+## 19. Pagination Log Activity & Detail Pendaftar & UI User (September 2026)
+
+1. **Pagination Log Activity (Admin):**
+   - **Masalah:** Halaman Log Activity di panel Admin tidak memiliki pagination, sehingga seluruh log ditampilkan sekaligus dan menyebabkan scroll panjang.
+   - **Fix Backend:** `LogActivityController@index` diubah dari `->get()` menjadi `->paginate(20)` untuk membatasi 20 log per halaman.
+   - **Fix Frontend:** Restrukturisasi HTML `LogActivity/index.blade.php` — menambahkan `<ul id="paginationLinks">` di dalam `card-footer` (rata kanan). JS `loadData(page)` kini memanggil `renderPagination(meta)` setelah data berhasil dimuat. Fungsi `renderPagination()` menghasilkan Bootstrap 5 pagination (`Previous | 1 | 2 | ... | Next`) dengan ellipsis otomatis dan highlight halaman aktif.
+
+2. **Detail Pendaftar di Admin Enrollment:**
+   - **Fitur Baru:** Menambahkan tombol "Detail" di setiap baris tabel Enrollment Admin.
+   - **Backend:** `EnrollmentController@index` diperluas eager load-nya: `with(['user.profile', 'user.questionnaireResponse', 'trainingCenter', 'pelatihan'])` — tanpa migration baru.
+   - **Frontend:** Modal `#modalDetailPendaftar` (Bootstrap `modal-lg`, scrollable) ditambahkan ke `Enrollment/index.blade.php`. Data seluruh enrollment disimpan ke array global `enrollmentData[]`. Fungsi `showDetail(index)` membaca data dari array tersebut dan merender 3 seksi: **Informasi Pribadi** (nama, email, usia, pendidikan, kecamatan, HP, alamat dari `user.profile`), **Jawaban Kuesioner** (dari `answers` JSON dengan label mapping: `bidang_diminati`, `tingkat_keahlian`, `metode_pelatihan`, `jarak_maksimal`), dan **Detail Pendaftaran** (pelatihan, TC, tanggal, status badge).
+   - **Bug Fix (JSON Parse):** `qr.answers` dari API kadang datang sebagai raw JSON string (bukan object). Ditambahkan guard `typeof answers === 'string'` → `JSON.parse()` dengan fallback `{}` untuk mencegah iterasi per-karakter yang menyebabkan tampilan berantakan (`0 {`, `1 "`, `2 j`, dst).
+
+3. **Perubahan Terminologi UI Manajemen User:**
+   - Kata "Blokir/Diblokir" pada halaman `admin/User/index.blade.php` diganti menjadi istilah yang lebih tepat:
+     - Badge status: `Diblokir` → `Non-Aktif`
+     - Tombol aksi: `Blokir Akun` → `Non-Aktifkan Akun`
+     - Teks konfirmasi modal: `DIBLOKIR (Tidak bisa masuk)` → `NON-AKTIF (Tidak bisa masuk)`

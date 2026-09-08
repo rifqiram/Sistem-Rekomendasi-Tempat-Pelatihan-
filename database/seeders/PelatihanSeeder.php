@@ -25,7 +25,6 @@ class PelatihanSeeder extends Seeder
                 'sertifikat' => 'Ya',
                 'training_center_id' => 1, // Asumsi 1 = BLK Magetan
                 'priority' => 5,
-                'popularity' => 80,
                 'tanggal_mulai' => '2026-06-01',
                 'tanggal_selesai' => '2026-06-08',
                 'is_active' => true,
@@ -43,7 +42,6 @@ class PelatihanSeeder extends Seeder
                 'sertifikat' => 'Ya',
                 'training_center_id' => 1,
                 'priority' => 4,
-                'popularity' => 75,
                 'tanggal_mulai' => '2026-06-10',
                 'tanggal_selesai' => '2026-06-16',
                 'is_active' => true,
@@ -61,7 +59,6 @@ class PelatihanSeeder extends Seeder
                 'sertifikat' => 'Ya',
                 'training_center_id' => 2, // Asumsi 2 = BLK Madiun
                 'priority' => 3,
-                'popularity' => 90,
                 'tanggal_mulai' => '2026-06-18',
                 'tanggal_selesai' => '2026-06-22',
                 'is_active' => true,
@@ -79,7 +76,6 @@ class PelatihanSeeder extends Seeder
                 'sertifikat' => 'Ya',
                 'training_center_id' => 2,
                 'priority' => 2,
-                'popularity' => 60,
                 'tanggal_mulai' => '2026-06-24',
                 'tanggal_selesai' => '2026-06-27',
                 'is_active' => true,
@@ -97,7 +93,6 @@ class PelatihanSeeder extends Seeder
                 'sertifikat' => 'Ya',
                 'training_center_id' => 3, // Asumsi 3 = LPK Sakura
                 'priority' => 5,
-                'popularity' => 95,
                 'tanggal_mulai' => '2026-07-01',
                 'tanggal_selesai' => '2026-07-06',
                 'is_active' => true,
@@ -115,7 +110,6 @@ class PelatihanSeeder extends Seeder
                 'sertifikat' => 'Ya',
                 'training_center_id' => 3,
                 'priority' => 5,
-                'popularity' => 85,
                 'tanggal_mulai' => '2026-07-08',
                 'tanggal_selesai' => '2026-07-12',
                 'is_active' => true,

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProfileRequest;
+use App\Models\LogActivity;
 use App\Models\Profile;
 use Illuminate\Http\Request;
 
@@ -37,6 +38,11 @@ class ProfileController extends Controller
         // Setelah profil (lokasi peta) diperbarui, jalankan ulang Recommendation Engine
         // agar skor jarak (Distance Score) terkalibrasi ulang.
         $engine->generateForUser($request->user()->id);
+
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'update_profile',
+        ]);
 
         return $this->successResponse($profile, 'Profile berhasil disimpan');
     }

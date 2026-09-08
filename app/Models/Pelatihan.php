@@ -16,7 +16,6 @@ class Pelatihan extends Model
         'location',
         'required_skill',
         'priority',
-        'popularity',
         'kategori',
         'level',
         'durasi',

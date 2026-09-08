@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreTrainingCenterRequest;
 use App\Http\Requests\UpdateTrainingCenterRequest;
+use App\Models\LogActivity;
 use App\Models\TrainingCenter;
 use Illuminate\Http\Request;
 
@@ -25,6 +26,11 @@ class TrainingCenterController extends Controller
     {
         // Pengecekan authorization (role admin) sudah ditangani oleh FormRequest (StoreTrainingCenterRequest->authorize())
         $trainingCenter = TrainingCenter::create($request->validated());
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'create_tc',
+            'training_center_id' => $trainingCenter->id,
+        ]);
         return $this->successResponse($trainingCenter, 'Training Center berhasil ditambahkan.', 201);
     }
 
@@ -48,6 +54,12 @@ class TrainingCenterController extends Controller
 
         $trainingCenter->update($request->validated());
 
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'update_tc',
+            'training_center_id' => $trainingCenter->id,
+        ]);
+
         return $this->successResponse($trainingCenter, 'Training Center berhasil diperbarui.');
     }
 
@@ -63,6 +75,12 @@ class TrainingCenterController extends Controller
         $trainingCenter = TrainingCenter::findOrFail($id);
 
         $trainingCenter->delete();
+
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'delete_tc',
+            'details' => 'Menghapus TC ID: ' . $id,
+        ]);
 
         return $this->successResponse(null, 'Training Center berhasil dihapus.');
     }

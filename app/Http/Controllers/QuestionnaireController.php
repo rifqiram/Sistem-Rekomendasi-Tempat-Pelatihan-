@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreQuestionnaireRequest;
+use App\Models\LogActivity;
 use App\Models\QuestionnaireResponse;
 use App\Services\RecommendationEngine;
 use Illuminate\Http\Request;
@@ -37,6 +38,11 @@ class QuestionnaireController extends Controller
 
         // Setelah kuesioner disubmit/diupdate, trigger Recommendation Engine
         $engine->generateForUser($request->user()->id);
+
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'update_questionnaire',
+        ]);
 
         return $this->successResponse(
             json_decode($response->answers, true),

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Enrollment;
+use App\Models\LogActivity;
 use Illuminate\Http\Request;
 
 class EnrollmentController extends Controller
@@ -17,7 +18,7 @@ class EnrollmentController extends Controller
             return $response;
         }
 
-        $enrollments = Enrollment::with(['user', 'trainingCenter', 'pelatihan'])
+        $enrollments = Enrollment::with(['user.profile', 'user.questionnaireResponse', 'trainingCenter', 'pelatihan'])
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
@@ -40,6 +41,14 @@ class EnrollmentController extends Controller
         $enrollment = Enrollment::findOrFail($id);
         $enrollment->status = $data['status'];
         $enrollment->save();
+
+        LogActivity::create([
+            'user_id' => $request->user()->id,
+            'activity_type' => 'update_enrollment',
+            'training_center_id' => $enrollment->training_center_id,
+            'pelatihan_id' => $enrollment->pelatihan_id,
+            'details' => 'Mengubah status pendaftaran ID: ' . $id . ' menjadi ' . $data['status'],
+        ]);
 
         return $this->successResponse($enrollment, 'Status pendaftaran berhasil diperbarui.');
     }

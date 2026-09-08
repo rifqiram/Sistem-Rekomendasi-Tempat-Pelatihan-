@@ -23,6 +23,14 @@ class StatsController extends Controller
         $totalPelatihan = Pelatihan::count();
         $totalEnrollment = Enrollment::count();
 
+                // Top 5 Pelatihan Terpopuler (Berdasarkan jumlah pendaftar disetujui)
+        $popularTrainings = Pelatihan::withCount(['enrollments as approved_enrollments_count' => function ($query) {
+                $query->where('status', 'approved');
+            }])
+            ->orderByDesc('approved_enrollments_count')
+            ->limit(5)
+            ->get(['id', 'judul']);
+
         // 5 Pendaftar Terbaru
         $recentEnrollments = Enrollment::with(['user', 'pelatihan', 'trainingCenter'])
             ->orderBy('created_at', 'desc')
@@ -37,6 +45,7 @@ class StatsController extends Controller
                 'enrollments' => $totalEnrollment,
             ],
             'recent_enrollments' => $recentEnrollments,
+            'popular_trainings' => $popularTrainings,
         ], 'Statistik Admin berhasil diambil');
     }
 }

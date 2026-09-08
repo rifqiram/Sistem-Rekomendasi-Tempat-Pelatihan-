@@ -159,6 +159,19 @@
     </div>
 </div>
 
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm" style="border-radius: 0.75rem;">
+            <div class="card-header bg-white border-0 py-3 d-flex justify-content-between align-items-center" style="border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem;">
+                <h3 class="card-title fw-bold mb-0 text-dark"><i class="fas fa-chart-bar text-primary me-2"></i> Grafik Popularitas Pelatihan (Top 5)</h3>
+            </div>
+            <div class="card-body">
+                <canvas id="popularityChart" style="min-height: 300px; max-height: 350px; width: 100%;"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <!-- Pendaftar Terbaru -->
     <div class="col-12">
@@ -196,6 +209,7 @@
 @endsection
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', async () => {
         try {
@@ -208,6 +222,49 @@
             document.getElementById('stat-pelatihan').textContent = stats.metrics.pelatihan;
             document.getElementById('stat-users').textContent = stats.metrics.users;
             document.getElementById('stat-enrollments').textContent = stats.metrics.enrollments;
+
+            // Chart Popularitas
+            const popularTrainings = stats.popular_trainings || [];
+            
+            // Check if there is at least one approved enrollment among the top 5
+            const hasData = popularTrainings.some(t => t.approved_enrollments_count > 0);
+            
+            if (hasData) {
+                const labels = popularTrainings.filter(t => t.approved_enrollments_count > 0).map(t => t.judul.length > 25 ? t.judul.substring(0, 25) + '...' : t.judul);
+                const counts = popularTrainings.filter(t => t.approved_enrollments_count > 0).map(t => t.approved_enrollments_count);
+                
+                const ctx = document.getElementById('popularityChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Pendaftar Disetujui',
+                            data: counts,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 1,
+                            borderRadius: 6
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { stepSize: 1, precision: 0 }
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            } else {
+                const ctxEl = document.getElementById('popularityChart');
+                ctxEl.parentNode.innerHTML = '<div class="text-center text-muted py-5"><i class="fas fa-chart-bar fs-1 d-block mb-3 opacity-25"></i>Belum ada data popularitas (Belum ada pendaftar yang disetujui)</div>';
+            }
 
             // Recent
             const tbody = document.getElementById('recent-enrollments');

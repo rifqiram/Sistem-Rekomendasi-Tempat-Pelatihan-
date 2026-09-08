@@ -145,7 +145,7 @@
             </div>
         </div>
 
-        <form id="kuesionerForm">
+        <form id="kuesionerForm" novalidate>
 
             <!-- Pertanyaan 1: Bidang -->
             <div class="card border-0 shadow-sm rounded-4 mb-4" style="background: var(--surface-color);">
@@ -158,11 +158,16 @@
 
                     <select class="form-select" id="q_bidang" required>
                         <option value="" disabled selected>-- Pilih Kategori Bidang --</option>
-                        <option value="IT">IT & Teknologi (Pemrograman, Jaringan, Data)</option>
-                        <option value="Bisnis">Bisnis & Manajemen (Marketing, Akuntansi)</option>
-                        <option value="Desain">Desain & Kreatif (Grafis, UI/UX, Video)</option>
-                        <option value="Bahasa">Bahasa Asing</option>
-                        <option value="Lainnya">Lainnya / Umum</option>
+                            <option value="IT">IT dan Teknologi Komputer</option>
+                            <option value="Bisnis">Bisnis dan Manajemen</option>
+                            <option value="Desain">Desain dan Kreatif</option>
+                            <option value="Bahasa">Bahasa Asing</option>
+                            <option value="Busana">Tata Busana</option>
+                            <option value="Memasak">Tata Boga</option>
+                            <option value="Pertanian">Pertanian</option>
+                            <option value="Peternakan">Peternakan</option>
+                            <option value="Pengelasan">Pengelasan</option>
+                            <option value="Caretaker">Caretaker</option>
                     </select>
                 </div>
             </div>
@@ -306,8 +311,42 @@
         const metodeEl = document.querySelector('input[name="q_metode"]:checked');
         const jarak = document.getElementById('q_jarak').value;
 
-        if (!bidang || !skillEl || !metodeEl || !jarak) {
-            window.showWarning('Data Belum Lengkap', 'Mohon lengkapi semua pilihan kuesioner sebelum melanjutkan.');
+        let missingFields = [];
+        if (!bidang) missingFields.push("Bidang Pelatihan");
+        if (!skillEl) missingFields.push("Tingkat Keahlian");
+        if (!metodeEl) missingFields.push("Metode Pelatihan");
+        if (!jarak) missingFields.push("Jarak Maksimal");
+
+        if (jarak && (parseInt(jarak) <= 0 || parseInt(jarak) > 100)) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Jarak Tidak Valid',
+                text: 'Maksimal jarak yang dapat Anda masukkan adalah 100 KM.',
+                confirmButtonText: 'Perbaiki',
+                customClass: {
+                    confirmButton: 'btn btn-primary rounded-pill px-4',
+                    popup: 'rounded-4'
+                },
+                buttonsStyling: false
+            });
+            return;
+        }
+
+        if (missingFields.length > 0) {
+            const missingText = missingFields.join(', ');
+            
+            // SweetAlert custom render html content instead of plaintext 'text'
+            Swal.fire({
+                icon: 'error',
+                title: 'Data Belum Lengkap',
+                html: `Mohon lengkapi isian yang masih kosong: <b>${missingText}</b> sebelum melanjutkan.`,
+                confirmButtonText: 'Periksa Kembali',
+                customClass: {
+                    confirmButton: 'btn btn-primary rounded-pill px-4',
+                    popup: 'rounded-4'
+                },
+                buttonsStyling: false
+            });
             return;
         }
 

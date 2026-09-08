@@ -144,13 +144,13 @@
                                 <span class="mt-1 w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                                     <svg class="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                                 </span>
-                                <span class="text-slate-600 leading-relaxed">Pemetaan mendalam berdasarkan minat & skill Anda.</span>
+                                <span class="text-slate-600 leading-relaxed">Pemetaan mendalam berbasis minat dan keahlian spesifik.</span>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
                                     <svg class="w-3 h-3 text-blue-600" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
                                 </span>
-                                <span class="text-slate-600 leading-relaxed">Analisis radius lokasi untuk pelatihan terdekat.</span>
+                                <span class="text-slate-600 leading-relaxed">Analisis radius lokasi geospasial yang akurat.</span>
                             </li>
                             <li class="flex items-start gap-3">
                                 <span class="mt-1 w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
@@ -167,9 +167,9 @@
             <section id="about" class="max-w-7xl mx-auto px-6">
                 <div class="text-center mb-12">
                     <span class="inline-block text-xs font-bold tracking-widest text-blue-600 uppercase mb-3">Siapa Kami</span>
-                    <h2 class="hero-heading text-3xl md:text-4xl font-bold text-slate-900 mb-4">Platform Agregator Pelatihan</h2>
+                    <h2 class="hero-heading text-3xl md:text-4xl font-bold text-slate-900 mb-4">Sistem Agregator & Rekomendasi Pusat Pelatihan</h2>
                     <p class="text-slate-500 leading-relaxed max-w-2xl mx-auto text-base">
-                        Kami menggunakan pemeringkatan <i>Rule-Based Scoring</i> untuk menganalisis data profil Anda dan merekomendasikan lembaga pelatihan yang memiliki indeks kecocokan tertinggi. Pendekatan analitik kami menjamin setiap rekomendasi relevan dan terukur.
+                        Sistem ini menggunakan pemeringkatan <i>Rule-Based Scoring</i> guna menganalisis profil pengguna dan merekomendasikan institusi pelatihan yang memiliki indeks kecocokan tertinggi. Pendekatan analitik ini menjamin agar setiap rekomendasi yang dihasilkan relevan dan terukur.
                     </p>
                 </div>
             </section>
@@ -310,10 +310,10 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     @php
                         $steps = [
-                            ['num' => '01', 'title' => 'Buat Profil Akun', 'desc' => 'Daftar dan lengkapi data demografi dasar Anda sebagai peserta.'],
-                            ['num' => '02', 'title' => 'Isi Kuesioner', 'desc' => 'Jawab pertanyaan sistem terkait minat, skill, dan preferensi lokasi.'],
-                            ['num' => '03', 'title' => 'Algoritma Memproses', 'desc' => 'Sistem Rule-Based Scoring akan menghitung skor kecocokan tertinggi.'],
-                            ['num' => '04', 'title' => 'Terima Rekomendasi', 'desc' => 'Dapatkan daftar tempat pelatihan yang paling relevan untuk Anda.'],
+                            ['num' => '01', 'title' => 'Registrasi Profil', 'desc' => 'Daftar dan lengkapi data demografi dasar pengguna untuk memulai proses analisis.'],
+                            ['num' => '02', 'title' => 'Pengisian Kuesioner', 'desc' => 'Jawab kuesioner sistem terkait minat, keahlian, serta preferensi geospasial.'],
+                            ['num' => '03', 'title' => 'Pemrosesan Algoritma', 'desc' => 'Sistem Rule-Based Scoring akan menghitung indeks kecocokan tertinggi secara objektif.'],
+                            ['num' => '04', 'title' => 'Penerbitan Rekomendasi', 'desc' => 'Dapatkan daftar institusi pelatihan yang paling kompatibel untuk pengembangan karir.'],
                         ];
                     @endphp
                     @foreach($steps as $step)
@@ -337,9 +337,9 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     @php
                         $testimonials = [
-                            ['quote' => '"Sistem ini sangat akurat mencocokkan kriteria biaya dan lokasi yang saya miliki dengan tempat pelatihan terbaik."', 'name' => 'Rifqi Ramadhan'],
-                            ['quote' => '"Kuesionernya mudah dipahami dan rekomendasi yang keluar benar-benar sesuai dengan minat belajar saya."', 'name' => 'Aulia Putri'],
-                            ['quote' => '"Sangat menghemat waktu pencarian. Tidak perlu lagi membandingkan puluhan tempat pelatihan secara manual."', 'name' => 'Muhammad Rizki'],
+                            ['quote' => '"Sistem ini sangat presisi dalam mencocokkan kriteria biaya dan lokasi yang saya butuhkan dengan institusi pelatihan terbaik."', 'name' => 'Rifqi Ramadhan'],
+                            ['quote' => '"Kuesionernya mudah dipahami dan rekomendasi yang disajikan benar-benar relevan dengan orientasi belajar saya."', 'name' => 'Aulia Putri'],
+                            ['quote' => '"Sangat mengefisienkan waktu pencarian. Tidak perlu lagi melakukan perbandingan antar institusi secara manual."', 'name' => 'Muhammad Rizki'],
                         ];
                     @endphp
                     @foreach($testimonials as $t)
@@ -361,9 +361,9 @@
                 <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-blue-950 to-blue-700 text-white px-10 py-16 text-center">
                     <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(circle at 20% 50%, #60a5fa 0%, transparent 50%), radial-gradient(circle at 80% 20%, #818cf8 0%, transparent 40%);"></div>
                     <div class="relative z-10">
-                        <h2 class="hero-heading text-3xl md:text-4xl font-bold mb-4">Temukan Tempat Pelatihan Anda Hari Ini</h2>
+                        <h2 class="hero-heading text-3xl md:text-4xl font-bold mb-4">Tentukan Pusat Pelatihan Terbaik Hari Ini</h2>
                         <p class="text-blue-100 leading-relaxed max-w-2xl mx-auto mb-8">
-                            Buat akun sekarang, lengkapi profil Anda, dan dapatkan rekomendasi dalam hitungan detik.
+                            Lakukan registrasi akun, lengkapi data profil, dan dapatkan analisis rekomendasi yang akurat secara otomatis.
                         </p>
                         <div class="flex flex-wrap justify-center gap-4">
                             <a href="{{ url('/user/register') }}" class="btn-primary-hover inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white text-slate-900 font-bold shadow-lg hover:bg-blue-50 transition">

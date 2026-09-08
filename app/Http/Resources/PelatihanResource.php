@@ -21,7 +21,7 @@ class PelatihanResource extends JsonResource
             'location' => $this->location,
             'required_skill' => $this->required_skill,
             'priority' => $this->priority,
-            'popularity' => $this->popularity,
+            'approved_enrollments_count' => $this->approved_enrollments_count,
             'training_center_id' => $this->training_center_id,
             'training_center' => $this->whenLoaded('trainingCenter'),
             'tanggal_mulai' => $this->tanggal_mulai?->toDateString(),

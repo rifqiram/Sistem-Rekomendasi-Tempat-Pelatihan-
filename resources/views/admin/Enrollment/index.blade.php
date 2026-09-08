@@ -99,6 +99,27 @@
 @endpush
 
 @section('content')
+
+{{-- Modal Detail Pendaftar --}}
+<div class="modal fade" id="modalDetailPendaftar" tabindex="-1" aria-labelledby="modalDetailLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold" id="modalDetailLabel">
+                    <i class="fas fa-user-circle text-primary me-2"></i> Detail Pendaftar
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body pt-2" id="modalDetailBody">
+                {{-- Diisi JS --}}
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div class="row">
     <div class="col-12">
         <div class="card mb-4">
@@ -117,11 +138,12 @@
                                 <th>Training Center</th>
                                 <th>Status</th>
                                 <th style="width: 150px;">Aksi</th>
+                                <th style="width: 100px;">Detail</th>
                             </tr>
                         </thead>
                         <tbody id="enrollment-table-body">
                             <tr>
-                                <td colspan="7" class="py-4">
+                                <td colspan="8" class="py-4">
                                     <div class="spinner-border text-primary" role="status"></div>
                                     <div class="mt-2">Memuat data...</div>
                                 </td>
@@ -137,6 +159,8 @@
 
 @push('scripts')
 <script>
+    let enrollmentData = [];
+
     document.addEventListener('DOMContentLoaded', async () => {
         loadData();
     });
@@ -152,9 +176,11 @@
             tbody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-4">Belum ada pendaftaran</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-4">Belum ada pendaftaran</td></tr>`;
                 return;
             }
+
+            enrollmentData = data;
 
             data.forEach((item, index) => {
                 const tr = createRow(item, index);
@@ -162,7 +188,7 @@
             });
 
         } catch (error) {
-            tbody.innerHTML = `<tr><td colspan="7" class="text-danger py-4">Gagal memuat data pendaftaran.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" class="text-danger py-4">Gagal memuat data pendaftaran.</td></tr>`;
         }
     }
 
@@ -188,6 +214,12 @@
                 <td class="text-start">${tc}</td>
                 <td>${renderStatus(currentStatus)}</td>
                 <td>${renderAction(item.id, currentStatus)}</td>
+                <td>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-3"
+                        onclick="showDetail(${index})">
+                        <i class="fas fa-eye me-1"></i> Detail
+                    </button>
+                </td>
             </tr>
         `;
     }
@@ -269,6 +301,124 @@
                 window.showToast('Gagal menolak pendaftaran', 'error');
             });
         }
+    }
+
+    function showDetail(index) {
+        const item = enrollmentData[index];
+        if (!item) return;
+
+        const user    = item.user || {};
+        const profile = user.profile || {};
+        const qr      = user.questionnaire_response || {};
+        let answers   = qr.answers || {};
+        if (typeof answers === 'string') {
+            try { answers = JSON.parse(answers); } catch { answers = {}; }
+        }
+        const pel     = item.pelatihan || {};
+        const tc      = item.training_center || {};
+
+        const val = (v, fallback = '-') => (v !== undefined && v !== null && v !== '') ? v : fallback;
+
+        // Label mapping jawaban kuesioner (sesuai key di DB: answers JSON)
+        const answerLabels = {
+            bidang_diminati  : 'Bidang Pelatihan',
+            tingkat_keahlian : 'Tingkat Keahlian',
+            metode_pelatihan : 'Metode Pelatihan',
+            jarak_maksimal   : 'Jarak Maksimal',
+        };
+
+        let answersHtml = '';
+        if (Object.keys(answers).length > 0) {
+            Object.entries(answers).forEach(([key, value]) => {
+                const label = answerLabels[key] || key.replace(/_/g, ' ');
+                const displayVal = key === 'jarak_maksimal' ? `${value} KM` : val(value);
+                answersHtml += `
+                    <div class="row mb-2">
+                        <div class="col-5 text-muted small">${label}</div>
+                        <div class="col-7 fw-semibold small">${displayVal}</div>
+                    </div>`;
+            });
+        } else {
+            answersHtml = `<p class="text-muted small fst-italic mb-0">Belum mengisi kuesioner.</p>`;
+        }
+
+        const statusBadge = item.status === 'approved'
+            ? `<span class="badge bg-success">Disetujui</span>`
+            : item.status === 'rejected'
+            ? `<span class="badge bg-danger">Ditolak</span>`
+            : `<span class="badge bg-warning text-dark">Pending</span>`;
+
+        const date = new Date(item.tanggal_daftar || item.created_at).toLocaleDateString('id-ID', {
+            day: 'numeric', month: 'long', year: 'numeric'
+        });
+
+        document.getElementById('modalDetailBody').innerHTML = `
+            <div class="mb-4">
+                <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">
+                    <i class="fas fa-id-card me-1"></i> Informasi Pribadi
+                </h6>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Nama Lengkap</div>
+                    <div class="col-7 fw-semibold small">${val(user.name)}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Email</div>
+                    <div class="col-7 fw-semibold small">${val(user.email)}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Usia</div>
+                    <div class="col-7 fw-semibold small">${val(profile.age)} ${profile.age ? 'tahun' : ''}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Pendidikan</div>
+                    <div class="col-7 fw-semibold small">${val(profile.education)}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Kecamatan</div>
+                    <div class="col-7 fw-semibold small">${val(profile.district)}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">No. HP</div>
+                    <div class="col-7 fw-semibold small">${val(profile.phone)}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Alamat</div>
+                    <div class="col-7 fw-semibold small">${val(profile.alamat_lengkap)}</div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">
+                    <i class="fas fa-list-alt me-1"></i> Jawaban Kuesioner
+                </h6>
+                ${answersHtml}
+            </div>
+
+            <div>
+                <h6 class="fw-bold text-uppercase text-muted small mb-3 border-bottom pb-2">
+                    <i class="fas fa-clipboard-check me-1"></i> Detail Pendaftaran
+                </h6>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Pelatihan</div>
+                    <div class="col-7 fw-semibold small">${val(pel.judul)}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Training Center</div>
+                    <div class="col-7 fw-semibold small">${val(tc.nama)}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Tanggal Daftar</div>
+                    <div class="col-7 fw-semibold small">${date}</div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-5 text-muted small">Status</div>
+                    <div class="col-7">${statusBadge}</div>
+                </div>
+            </div>
+        `;
+
+        const modal = new bootstrap.Modal(document.getElementById('modalDetailPendaftar'));
+        modal.show();
     }
 </script>
 @endpush

@@ -231,7 +231,7 @@
             </div>
             <div>
                 <h3 class="fw-bold mb-0" style="color: var(--text-main);">Riwayat Pendaftaran</h3>
-                <p class="text-muted mb-0 small">Lacak status program pelatihan yang telah Anda pilih.</p>
+                <p class="text-muted mb-0 small">Status program pelatihan yang telah Anda pilih.</p>
             </div>
         </div>
 

@@ -127,6 +127,78 @@
         border-radius: 50rem;
         transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
     }
+    /* Trending List Custom */
+    .trending-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .trending-item {
+        background: var(--surface-color);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s ease;
+    }
+    
+    .trending-item:hover {
+        border-color: var(--primary-color);
+        box-shadow: var(--shadow-sm);
+        transform: translateX(4px);
+    }
+    
+    .trending-rank {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+        color: var(--text-muted);
+        background: rgba(0,0,0,0.05);
+    }
+    
+    .trending-rank.rank-1 { background: rgba(245, 158, 11, 0.15); color: #d97706; }
+    .trending-rank.rank-2 { background: rgba(148, 163, 184, 0.2); color: #475569; }
+    .trending-rank.rank-3 { background: rgba(180, 83, 9, 0.15); color: #92400e; }
+    
+    .trending-body {
+        flex-grow: 1;
+        min-width: 0;
+    }
+    
+    .trending-title {
+        font-weight: 700;
+        color: var(--text-main);
+        font-size: 0.95rem;
+        margin-bottom: 0.15rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .trending-tc {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    
+    .trending-stats {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
 </style>
 @endpush
 
@@ -192,6 +264,24 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Trending Trainings Card (Moved to Left Column) --}}
+            <div class="card border-0 shadow-sm rounded-4 mt-4" style="background: var(--surface-color);">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center mb-4">
+                        <i class="fas fa-chart-line text-primary fs-4 me-2"></i>
+                        <h5 class="fw-bold mb-0" style="color: var(--text-main);">Tempat Pelatihan Banyak Diminati</h5>
+                    </div>
+                    
+                    <div id="trendingContainer" class="trending-list">
+                        <div class="text-center py-4 text-muted">
+                            <div class="spinner-border spinner-border-sm text-primary mb-2"></div>
+                            <div class="small">Memuat daftar pelatihan...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         {{-- Right Column: Account Info --}}
@@ -290,6 +380,7 @@
 
                 // GATEKEEPER LOGIC
                 if (!profile || !profile.age || !profile.latitude) {
+                    await window.showError('Profil Belum Lengkap', 'Anda harus melengkapi biodata dan alamat lokasi terlebih dahulu sebelum mengakses Dashboard.');
                     window.location.href = '/user/profile';
                     return;
                 }
@@ -297,6 +388,7 @@
                 const kuesioner = await window.authFetch(window.apiBase + '/questionnaire').then(window.parseApi).catch(() => null);
 
                 if (!kuesioner || !kuesioner.bidang_diminati) {
+                    await window.showError('Kuesioner Belum Diisi', 'Silakan isi preferensi kuesioner Anda agar sistem dapat merekomendasikan pelatihan yang tepat.');
                     window.location.href = '/user/questionnaire';
                     return;
                 }
@@ -332,7 +424,57 @@
             }
         }
 
+        // Load Trending Trainings
+        async function loadTrendingTrainings() {
+            try {
+                const data = await window.authFetch(window.apiBase + '/trending-trainings').then(window.parseApi);
+                const container = document.getElementById('trendingContainer');
+                container.innerHTML = '';
+                
+                const items = data.data || data;
+                
+                if (!items || items.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-4 text-muted border rounded-3 bg-light">
+                            <i class="fas fa-info-circle fs-3 mb-2 opacity-50"></i>
+                            <div class="small fw-medium">Belum ada data popularitas</div>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                items.forEach((item, index) => {
+                    const rank = index + 1;
+                    let rankClass = '';
+                    if (rank === 1) rankClass = 'rank-1';
+                    else if (rank === 2) rankClass = 'rank-2';
+                    else if (rank === 3) rankClass = 'rank-3';
+                    
+                    const tcName = item.training_center ? item.training_center.nama : 'Lembaga tidak diketahui';
+                    
+                    container.insertAdjacentHTML('beforeend', `
+                        <div class="trending-item">
+                            <div class="trending-rank ${rankClass}">${rank}</div>
+                            <div class="trending-body">
+                                <div class="trending-title" title="${item.judul}">${item.judul}</div>
+                                <div class="trending-tc" title="${tcName}"><i class="fas fa-building opacity-50 me-1"></i> ${tcName}</div>
+                            </div>
+                            <div class="trending-stats">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-semibold">
+                                    <i class="fas fa-users me-1"></i> ${item.approved_count}
+                                </span>
+                            </div>
+                        </div>
+                    `);
+                });
+            } catch (err) {
+                console.error(err);
+                document.getElementById('trendingContainer').innerHTML = '<div class="text-danger small p-3 border rounded text-center">Gagal memuat data trending.</div>';
+            }
+        }
+
         loadDashboardData();
+        loadTrendingTrainings();
     });
 </script>
 @endpush

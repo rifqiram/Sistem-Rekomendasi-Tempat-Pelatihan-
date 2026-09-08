@@ -153,7 +153,7 @@
 
                     <div class="mb-4">
                         <label class="form-label">Deskripsi Singkat</label>
-                        <textarea class="form-control" id="deskripsi" rows="2" placeholder="Tuliskan silabus atau penjelasan singkat pelatihan..."></textarea>
+                        <textarea class="form-control" id="deskripsi" rows="2" placeholder="Tuliskan penjelasan singkat pelatihan..."></textarea>
                     </div>
 
                     <!-- Recommendation Engine Attributes -->
@@ -169,11 +169,16 @@
                                 <label class="form-label">Kategori Bidang</label>
                                 <select class="form-select form-select-sm" id="interest_category">
                                     <option value="">Tidak Ditentukan</option>
-                                    <option value="IT">IT & Teknologi</option>
-                                    <option value="Bisnis">Bisnis & Manajemen</option>
-                                    <option value="Desain">Desain & Kreatif</option>
+                                    <option value="IT">IT dan Teknologi Komputer</option>
+                                    <option value="Bisnis">Bisnis dan Manajemen</option>
+                                    <option value="Desain">Desain dan Kreatif</option>
                                     <option value="Bahasa">Bahasa Asing</option>
-                                    <option value="Lainnya">Lainnya Umum</option>
+                                    <option value="Busana">Tata Busana</option>
+                                    <option value="Memasak">Tata Boga</option>
+                                    <option value="Pertanian">Pertanian</option>
+                                    <option value="Peternakan">Peternakan</option>
+                                    <option value="Pengelasan">Pengelasan</option>
+                                    <option value="Caretaker">Caretaker</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
@@ -195,8 +200,7 @@
                             <div class="col-md-3">
                                 <label class="form-label">Skor Popularitas</label>
                                 <div class="input-group input-group-sm">
-                                    <input type="number" class="form-control" id="popularity" value="0" min="0" max="100">
-                                    <span class="input-group-text bg-white text-muted">/ 100</span>
+                                    <input type="text" class="form-control bg-light" id="popularity_display" readonly value="0 pengguna">
                                 </div>
                             </div>
                         </div>
@@ -337,6 +341,7 @@
             document.getElementById('pelatihanModalLabel').textContent = 'Tambah Pelatihan Baru';
             document.getElementById('pelatihan_id').value = '';
             document.getElementById('is_active').value = '1';
+            document.getElementById('popularity_display').value = '0 pengguna';
         }
         pelatihanModal.show();
     }
@@ -352,7 +357,7 @@
         document.getElementById('interest_category').value = item.interest_category || '';
         document.getElementById('method').value = item.method || 'Online';
         document.getElementById('required_skill').value = item.required_skill || 'Beginner';
-        document.getElementById('popularity').value = item.popularity || 0;
+        document.getElementById('popularity_display').value = (item.approved_enrollments_count || 0) + " pengguna";
         document.getElementById('tanggal_mulai').value = item.tanggal_mulai ? item.tanggal_mulai.split('T')[0] : '';
         document.getElementById('tanggal_selesai').value = item.tanggal_selesai ? item.tanggal_selesai.split('T')[0] : '';
         document.getElementById('sertifikat').value = item.sertifikat || '';
@@ -372,7 +377,6 @@
             interest_category: document.getElementById('interest_category').value,
             method: document.getElementById('method').value,
             required_skill: document.getElementById('required_skill').value,
-            popularity: document.getElementById('popularity').value,
             tanggal_mulai: document.getElementById('tanggal_mulai').value,
             tanggal_selesai: document.getElementById('tanggal_selesai').value,
             sertifikat: document.getElementById('sertifikat').value,

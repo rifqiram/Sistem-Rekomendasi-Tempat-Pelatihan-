@@ -103,6 +103,11 @@
     justify-content: center !important;
 }
 
+.modern-swal-btn[style*="display: none"],
+.modern-swal-btn[style*="display:none"] {
+    display: none !important;
+}
+
 .modern-swal-btn:focus {
     outline: none !important;
     box-shadow: 0 0 0 2px var(--swal-bg), 0 0 0 4px var(--swal-primary) !important;

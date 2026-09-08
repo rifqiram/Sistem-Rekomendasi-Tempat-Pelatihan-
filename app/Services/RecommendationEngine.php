@@ -39,14 +39,20 @@ class RecommendationEngine
 
         // Fase 3: Persist Recommendation
         $this->persistRecommendations($userId, $scoredCenters);
+
+        \App\Models\LogActivity::create([
+            'user_id' => $userId,
+            'activity_type' => 'generate_recommendation',
+        ]);
     }
 
     private function applyHardFilter(array $answers)
     {
         // Status Aktif: is_active = true
-        // Pastikan pelatihan memiliki training_center_id
+        // Pelatihan memiliki training_center_id
         $query = Pelatihan::where('is_active', true)
-            ->whereNotNull('training_center_id');
+            ->whereNotNull('training_center_id')
+            ->withCount(['enrollments as approved_enrollments_count' => fn($q) => $q->where('status', 'approved')]);
 
         // Bidang Pelatihan
         if (isset($answers['bidang_diminati'])) {
@@ -61,7 +67,7 @@ class RecommendationEngine
             } elseif ($userSkill === 'intermediate') {
                 $query->whereIn('required_skill', ['Beginner', 'beginner', 'Intermediate', 'intermediate']);
             }
-            // Advanced can access everything
+            // Advanced bisa akses semuanya
         }
 
         // Metode
@@ -116,7 +122,7 @@ class RecommendationEngine
             }
 
             // Popularitas (10%)
-            $popularityVal = min(100, max(0, $training->popularity ?? 0));
+            $popularityVal = min($training->approved_enrollments_count ?? 0, 100);
             $popularityScore = ($popularityVal / 100) * 10;
             $score += $popularityScore;
 
@@ -188,8 +194,8 @@ class RecommendationEngine
                     'popularity' => [
                         'score' => isset($centerMaxScores[$tcId]['popularity']) ? round($centerMaxScores[$tcId]['popularity'], 2) : 0,
                         'max' => 10,
-                        'status' => (isset($centerMaxScores[$tcId]['popularity']) && $centerMaxScores[$tcId]['popularity'] >= 8) ? 'match' : (isset($centerMaxScores[$tcId]['popularity']) && $centerMaxScores[$tcId]['popularity'] > 4 ? 'partial' : 'none'),
-                        'label' => 'Berdasarkan popularitas pelatihan di TC ini'
+                        'status' => (isset($centerMaxScores[$tcId]['popularity']) && $centerMaxScores[$tcId]['popularity'] >= 8) ? 'match' : ((isset($centerMaxScores[$tcId]['popularity']) && $centerMaxScores[$tcId]['popularity'] > 0) ? 'partial' : 'none'),
+                        'label' => 'Berdasarkan popularitas (enrollment yang disetujui)'
                     ],
                     'distance' => [
                         'score' => round(isset($distScore) ? $distScore : 0, 2),

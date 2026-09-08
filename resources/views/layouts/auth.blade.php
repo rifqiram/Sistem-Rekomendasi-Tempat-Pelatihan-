@@ -76,7 +76,7 @@
 
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
-    <script src="{{ asset('js/utils/sweetalert.js') }}"></script>
+    <script src="{{ asset('js/utils/sweetalert.js?v=' . time()) }}"></script>
 
     <!-- Global Utility Script for Auth Alerts -->
     <script>
@@ -88,8 +88,5 @@
     </script>
 
     @stack('scripts')
-    @if(app()->isLocal() || config('app.debug'))
-        @include('components.ux-audit')
-    @endif
 </body>
 </html>
